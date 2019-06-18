@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taskDefinition id="cherwell_object_find" name="Cherwell Object Find" schema_version="1.0" version="1">
+    <author>support@kineticdata.com</author>
+    <description>
+        Generically searches for objects from Cherwell.
+    </description>
+    <helpurl></helpurl>
+    <visible>true</visible>
+    <deferrable>false</deferrable>
+    <parameters>
+        <parameter id="object_name" label="Object Name" required="true"
+          tooltip="Readable name of the object to retrieve (ie. Incident)."/>
+        <parameter id="fields" label="Fields to Return" required="false"
+          tooltip="Comma separated list of fields to return (if none entered, all fields will be returned)."/>
+        <parameter id="filters" label="Filters" required="false"
+          tooltip="A JSON object with key/value pairs that will be searched for equality."/>
+        <parameter id="max_results" label="Max Results" required="false"
+          tooltip="The maximum amount of results that can be returned in a single handler execution (if blank, as many as possible will be returned).">5</parameter>
+    </parameters>
+    <handler name="cherwell_object_find" version="1">
+        <infos>
+            <info name="api_location">&lt;%= @info['api_location'] %&gt;</info>
+            <info name="client_id">&lt;%= @info['client_id'] %&gt;</info>
+            <info name="client_secret">&lt;%= @info['client_secret'] %&gt;</info>
+            <info name="username">&lt;%= @info['username'] %&gt;</info>
+            <info name="password">&lt;%= @info["password"] %&gt;</info>
+            <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
+        </infos>
+        <parameters>
+            <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
+            <parameter name="fields">&lt;%= @parameters['fields'] %&gt;</parameter>
+            <parameter name="filters">&lt;%= @parameters['filters'] %&gt;</parameter>
+            <parameter name="page_size">&lt;%= @parameters['page_size'] %&gt;</parameter>
+        </parameters>
+    </handler>
+    <results format="xml">
+        <result name="JSON Results"></result>
+        <result name="Count"></result>
+        <result name="Total Matched"></result>
+    </results>
+</taskDefinition>

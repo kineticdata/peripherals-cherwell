@@ -1,0 +1,23 @@
+== Cherwell Object Delete
+Generically deletes a Cherwell object
+
+=== Parameters
+[Object Name]
+  Readable name of the object to delete (ie. Incident).
+[Object Id]
+  Id of the object to be deleted.
+
+=== Sample Configuration
+Object Name:            Incident
+Object Id:              47285
+
+=== Results
+This handler returns no results.
+
+=== Detailed Description
+This handler generically deletes a Cherwell object given an Object name and id. Execution starts
+by retrieving an Access Token from Cherwell using the client id/secret and username/password info
+values. Once that is successfully retrieved, the Object Name is translated into a Business Object Id
+by using the /getbusinessobjectsummary endpoint. The returned Business Object Id and inputted Object
+Id are then passed to the /deletebusinessobject endpoint to delete the object. An empty result set
+will be returned on a successful delete.

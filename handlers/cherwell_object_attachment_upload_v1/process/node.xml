@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taskDefinition id="cherwell_object_attachment_upload" name="Cherwell Object Attachment Upload" schema_version="1.0" version="1">
+    <author>support@kineticdata.com</author>
+    <description>
+        Generically uploads an attachment from a Request CE submission to an existing object in Cherwell.
+    </description>
+    <helpurl></helpurl>
+    <visible>true</visible>
+    <deferrable>false</deferrable>
+    <parameters>
+        <parameter id="object_name" label="Object Name" required="true"
+          tooltip="Readable name of the object type to upload an attachment to (ie. Incident)."/>
+        <parameter id="object_id" label="Object Id" required="true"
+          tooltip="Id of the object that the attachment will be uploaded to."/>
+        <parameter id="attachment_space_slug" label="Attachment Space Slug" required="true"
+          tooltip="Slug for the Attachment's Request CE space."/>
+        <parameter id="attachment_submission_id" label="Attachment Submission Id" required="true"
+          tooltip="Id for the Attachment's Request CE submission."/>
+        <parameter id="attachment_field_name" label="Attachment Field Name" required="true"
+          tooltip="Name for the Attachment's field label."/>
+    </parameters>
+    <handler name="cherwell_object_attachment_upload" version="1">
+        <infos>
+            <info name="api_location">&lt;%= @info['api_location'] %&gt;</info>
+            <info name="client_id">&lt;%= @info['client_id'] %&gt;</info>
+            <info name="client_secret">&lt;%= @info['client_secret'] %&gt;</info>
+            <info name="username">&lt;%= @info['username'] %&gt;</info>
+            <info name="password">&lt;%= @info["password"] %&gt;</info>
+            <info name="request_ce_server">&lt;%= @info["request_ce_server"] %&gt;</info>
+            <info name="request_ce_username">&lt;%= @info["request_ce_username"] %&gt;</info>
+            <info name="request_ce_password">&lt;%= @info["request_ce_password"] %&gt;</info>
+            <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
+        </infos>
+        <parameters>
+            <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
+            <parameter name="object_id">&lt;%= @parameters['object_id'] %&gt;</parameter>
+            <parameter name="attachment_space_slug">&lt;%= @parameters['attachment_space_slug'] %&gt;</parameter>
+            <parameter name="attachment_submission_id">&lt;%= @parameters['attachment_submission_id'] %&gt;</parameter>
+            <parameter name="attachment_field_name">&lt;%= @parameters['attachment_field_name'] %&gt;</parameter>
+        </parameters>
+    </handler>
+    <results format="xml">
+        <result name="Attachment Ids"></result>
+    </results>
+</taskDefinition>

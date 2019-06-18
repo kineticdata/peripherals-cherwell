@@ -1,0 +1,37 @@
+== Cherwell Object Attachment Upload
+Generically uploads an attachment from a Request CE submission to an existing object in Cherwell.
+
+=== Parameters
+[Object Name]
+  Readable name of the object type to upload an attachment to (ie. Incident).
+[Object Id]
+  Id of the object that the attachment will be uploaded to.
+[Attachment Space Slug]
+  Slug for the Attachment's Request CE space.
+[Attachment Submission Id]
+  Id for the Attachment's Request CE submission.
+[Attachment Field Name]
+  Name for the Attachment's field label.
+
+=== Sample Configuration
+Object Name:               Incident
+Object Id:                 9434ec6c52d4319c9ea769414f8b6740b9b562e54b
+Attachment Space Slug:     internal
+Attachment Submission Id:  e7b32620-2183-11e8-b8f5-b18678c1c358
+Attachment Field Name:     Attachment
+
+=== Results
+[Attachment Ids]
+  A comma separated list of attachment ids that are generated for each object uploaded as an
+  attachment.
+
+=== Detailed Description
+This handler generically uploads an attachment to a Cherwell object and return a list of the
+attachment ids that were generated. Execution starts by retrieving an Access Token from Cherwell
+using the client id/secret and username/password info values. Once that is successfully retrieved,
+the Request CE info values and inputs are used to retrieve all attachments from the specified
+submission value (both single and multiple attachments on a single field work). Once a temporary
+link is generated for an attachment, the handler then downloads the attachment content and then
+immediately uploads it to the specified object in Cherwell. This process is repeated for however
+many attachments exist in the specified submission value and the attachment ids returned by Cherwell
+are returned as handler results if all attachment uploads are successful.

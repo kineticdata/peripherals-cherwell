@@ -1,0 +1,29 @@
+== Cherwell Object Updates
+Generically updates a Cherwell object
+
+=== Parameters
+[Object Name]
+  Readable name of the object to retrieve (ie. Incident).
+[Object Id]
+  Id of the object to be retrieved.
+[Object JSON]
+  A JSON representation of the displayName/values for the fields that the object should be updated
+  with
+
+=== Sample Configuration
+Object Name:            Incident
+Object Id:              47285
+Object JSON:            {"Description": "Update from a Task Handler"}
+
+=== Results
+This handler returns no results
+
+=== Detailed Description
+This handler generically updates a Cherwell object using an inputted JSON representation to
+determine what fields to update on the object. Execution starts by retrieving an Access Token from
+Cherwell using the client id/secret and username/password info values. Once that is successfully
+retrieved, the Object Name is translated into a Business Object Id by using the
+/getbusinessobjectsummary endpoint. A call to retrieve the object template is made so that
+the field object/ids can be found for the fields that should be updated and lastly the call is
+made to /savebusinessobject to update the included fields on the inputted object. An empty result
+set will be returned on a successful call.

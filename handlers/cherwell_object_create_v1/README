@@ -1,0 +1,27 @@
+== Cherwell Object Create
+Generically creates a Cherwell object
+
+=== Parameters
+[Object Name]
+  Readable name of the object to retrieve (ie. Incident).
+[Object JSON]
+  A JSON representation of the displayName/values for the fields that the object should be created with.
+
+=== Sample Configuration
+Object Name:            Incident
+Object JSON:            {"Status":"New","Description":"From Kinetic Task"...}
+
+=== Results
+[Object Id]
+  Id for the newly created object
+
+=== Detailed Description
+This handler generically creates a Cherwell object based on inputted JSON and returns an id of the
+new object after creation. Execution starts by retrieving an Access Token from Cherwell using the
+client id/secret and username/password info values. Once that is successfully retrieved, the Object
+Name is translated into a Business Object Id by using the /getbusinessobjectsummary endpoint. Next,
+a call to /getbusinessobjectemplate is made so the handler can exchange the Display Names (that are
+used in the inputted Object JSON string) for Field Ids for each of the fields that should be
+populated on create. Lastly, that translated JSON object is passed to /savebusinessobject to
+actually create the object in Cherwell. If the call is successful, the id of the newly created
+object will be returned by the handler.

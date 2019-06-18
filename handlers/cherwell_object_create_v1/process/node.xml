@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taskDefinition id="cherwell_object_create" name="Cherwell Object Create" schema_version="1.0" version="1">
+    <author>support@kineticdata.com</author>
+    <description>
+        Generically creates an object in Cherwell.
+    </description>
+    <helpurl></helpurl>
+    <visible>true</visible>
+    <deferrable>false</deferrable>
+    <parameters>
+        <parameter id="object_name" label="Object Name" required="true"
+          tooltip="Readable name of the object to retrieve (ie. Incident)."/>
+        <parameter id="object_json" label="Object JSON" required="true"
+          tooltip="A JSON representation of the displayName/values for the fields that the object should be created with."/>
+    </parameters>
+    <handler name="cherwell_object_create" version="1">
+        <infos>
+            <info name="api_location">&lt;%= @info['api_location'] %&gt;</info>
+            <info name="client_id">&lt;%= @info['client_id'] %&gt;</info>
+            <info name="client_secret">&lt;%= @info['client_secret'] %&gt;</info>
+            <info name="username">&lt;%= @info['username'] %&gt;</info>
+            <info name="password">&lt;%= @info["password"] %&gt;</info>
+            <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
+        </infos>
+        <parameters>
+            <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
+            <parameter name="object_json">&lt;%= @parameters['object_json'] %&gt;</parameter>
+        </parameters>
+    </handler>
+    <results format="xml">
+        <result name="Object Id"></result>
+    </results>
+</taskDefinition>

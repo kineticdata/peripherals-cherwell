@@ -1,0 +1,25 @@
+== Cherwell Object Retrieve
+Generically retrieves a Cherwell object
+
+=== Parameters
+[Object Name]
+  Readable name of the object to retrieve (ie. Incident).
+[Object Id]
+  Id of the object to be retrieved.
+
+=== Sample Configuration
+Object Name:            Incident
+Object Id:              47285
+
+=== Results
+[Object JSON]
+  A JSON representation of the object that matches the id.
+
+=== Detailed Description
+This handler generically retrieves a Cherwell object and returns a JSON representation of the found
+object. Execution starts by retrieving an Access Token from Cherwell using the client id/secret and
+username/password info values. Once that is successfully retrieved, the Object Name is translated
+into a Business Object Id by using the /getbusinessobjectsummary endpoint. The returned Business
+Object Id and inputted Object Id are then passed to the /getbusinessobject endpoint to retrieve the
+full matching object. Lastly, the fields return are converted from an array to a simplified map of
+field information in the form of {displayName: value}.
