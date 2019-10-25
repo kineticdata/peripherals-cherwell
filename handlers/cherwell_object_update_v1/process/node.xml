@@ -10,7 +10,7 @@
     <parameters>
         <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object to update (ie. Incident)."/>
-          <parameter id="object_update" label="Object Update" required="true"
+        <parameter id="object_id" label="Object Id" required="true"
           tooltip="Public id for the object that should be updated.."/>
         <parameter id="object_json" label="Object JSON" required="true"
           tooltip="A JSON representation of the displayName/values for the fields that the object should be updated with."/>
