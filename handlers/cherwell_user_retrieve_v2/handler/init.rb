@@ -60,7 +60,7 @@ class CherwellUserRetrieveV2
         raise
       end
     end
-puts @parameters['login_id']
+
     # Move the fields from a list to a map of {displayName: value}
     if object && !object.empty?
       fields = {}
