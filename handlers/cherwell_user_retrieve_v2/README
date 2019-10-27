@@ -1,0 +1,25 @@
+== Cherwell Object Retrieve
+Retrieves a user record using Cherwell API V1
+
+=== Parameters
+[Login Id]
+  Internal Cherwell Login ID of the user record to retrieve.
+[Login Id Type]
+  The type of login - either 'Internal' or 'Windows'
+
+=== Sample Configuration
+Login Id:            CSDAdmin
+Login Id Type:       Internal
+
+=== Results
+[Message]
+  Will include "User <provided login id> not found" if the login it provided is not found.
+[User JSON]
+  A JSON representation of the user that matches the id.  Will be an empty hash if a user is not found.
+
+=== Detailed Description
+This handler retrieves a Cherwell user and returns a JSON representation of the found
+user. Execution starts by retrieving an Access Token from Cherwell using the client id/secret
+and username/password info values. Once that is successfully retrieved, the user is retrieved.
+Lastly, the fields returned are converted from an array to a simplified map of field
+information in the form of {displayName: value}.
