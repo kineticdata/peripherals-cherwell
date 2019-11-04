@@ -2,6 +2,8 @@
 Generically searches for objects from Cherwell.
 
 === Parameters
+[Error Handling]
+    Determine what to return if an error is encountered.
 [Object Name]
   Readable name of the object to retrieve (ie. Incident).
 [Fields to Return]
@@ -13,12 +15,15 @@ Generically searches for objects from Cherwell.
   many as possible will be returned).
 
 === Sample Configuration
+Error Handling:               Error Message
 Object Name:            Incident
 Fields to Return:
 Filters:                {"Status": "New", "Customer ID": "fa00c2e9123e423cb2c96e63ee72bc4a"}
 Max Results:            5
 
 === Results
+[Handler Error Message]
+    Error message if an error was encountered and Error Handling is set to "Error Message".
 [JSON Results]
   JSON representations of the objects that match the inputted filters.
 [Count]

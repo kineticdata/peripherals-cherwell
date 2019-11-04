@@ -8,6 +8,7 @@
     'enable_debug_logging'=>'yes'
   },
   'parameters' => {
+    'error_handling' => 'Error Message',
     'object_name' => 'Incident',
     'object_id' => '',
     'object_json' => ''

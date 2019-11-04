@@ -8,6 +8,8 @@
     <visible>true</visible>
     <deferrable>false</deferrable>
     <parameters>
+        <parameter id="error_handling" label="Error Handling" required="true"
+        tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
         <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object to retrieve (ie. Incident)."/>
         <parameter id="fields" label="Fields to Return" required="false"
@@ -27,6 +29,8 @@
             <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
         </infos>
         <parameters>
+            <parameter name="error_handling">&lt;%= @parameters.has_key?("error_handling") ?
+            @parameters["error_handling"] : "Raise Error" %&gt;</parameter>
             <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
             <parameter name="fields">&lt;%= @parameters['fields'] %&gt;</parameter>
             <parameter name="filters">&lt;%= @parameters['filters'] %&gt;</parameter>
@@ -34,6 +38,7 @@
         </parameters>
     </handler>
     <results format="xml">
+        <result name="Handler Error Message"/>
         <result name="JSON Results"></result>
         <result name="Count"></result>
         <result name="Total Matched"></result>

@@ -2,16 +2,21 @@
 Generically creates a Cherwell object
 
 === Parameters
+[Error Handling]
+    Determine what to return if an error is encountered.
 [Object Name]
   Readable name of the object to retrieve (ie. Incident).
 [Object JSON]
   A JSON representation of the displayName/values for the fields that the object should be created with.
 
 === Sample Configuration
+Error Handling:               Error Message
 Object Name:            Incident
 Object JSON:            {"Status":"New","Description":"From Kinetic Task"...}
 
 === Results
+[Handler Error Message]
+    Error message if an error was encountered and Error Handling is set to "Error Message".
 [Object Id]
   Id for the newly created object
 

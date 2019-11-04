@@ -24,9 +24,14 @@ class CherwellUserRetrieveV2
   end
 
   def execute
+
+    error_handling  = @parameters["error_handling"]
+    error_message = ""
+
     # Validate Login ID grant_type
     if !(['Internal','Windows'].include?(@parameters['login_id_type'].capitalize))
-      raise "Login ID Type '#{@parameters['login_id_type']}' does not match a valid option of 'Internal' or 'Windows'."
+      error_message = "Login ID Type '#{@parameters['login_id_type']}' does not match a valid option of 'Internal' or 'Windows'."
+      raise error if error_handling == "Raise Error"
     end
 
     # Retrieve an access token from Cherwell
@@ -54,11 +59,8 @@ class CherwellUserRetrieveV2
       resp2 = resource["/api/V2/getuserbyloginid?loginid=#{CGI::escape(@parameters['login_id'])}&loginidtype=#{@parameters['login_id_type']}"].get
       object = JSON.parse(resp2.body)
     rescue RestClient::ExceptionWithResponse => e
-      if e.message == "500 Internal Server Error" && JSON.parse(e.response)['Message'].start_with?("RECORDNOTFOUND")
-        message = "User #{@parameters['login_id']} not found"
-      else
-        raise
-      end
+        error_message = "User #{@parameters['login_id']} not found"
+        raise e if error_handling == "Raise Error"
     end
 
     # Move the fields from a list to a map of {displayName: value}
@@ -78,7 +80,7 @@ class CherwellUserRetrieveV2
 
     return <<-RESULTS
     <results>
-      <result name="Message">#{escape(message || "")}</result>
+      <result name="Handler Error Message">#{escape(message || "")}</result>
       <result name="User JSON">#{escape(object.to_json)}</result>
     </results>
     RESULTS

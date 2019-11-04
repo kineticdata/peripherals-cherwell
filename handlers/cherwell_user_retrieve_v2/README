@@ -2,6 +2,8 @@
 Retrieves a user record using Cherwell API V1
 
 === Parameters
+[Error Handling]
+    Determine what to return if an error is encountered.
 [Login Id]
   Internal Cherwell Login ID of the user record to retrieve.
 [Login Id Type]
@@ -12,7 +14,7 @@ Login Id:            CSDAdmin
 Login Id Type:       Internal
 
 === Results
-[Message]
+[Handler Error Message]
   Will include "User <provided login id> not found" if the login it provided is not found.
 [User JSON]
   A JSON representation of the user that matches the id.  Will be an empty hash if a user is not found.

@@ -24,6 +24,10 @@ class CherwellObjectUpdateV1
   end
 
   def execute
+    error_handling  = @parameters["error_handling"]
+    error_message = ""
+
+    begin
     # Retrieve an access token from Cherwell
     resp = RestClient.post(
       @info_values['api_location']+"/token",
@@ -87,9 +91,17 @@ class CherwellObjectUpdateV1
       "fields" => body_fields
     }.to_json)
     # puts resp.body
+  rescue RestClient::ResourceNotFound => error
+    error_message = error.inspect
+    raise "404 Not Found: Make sure the 'server', 'api_route'. and 'api_parameters' are valid inputs: #{error.http_body}."
+  rescue RestClient::Exception => error
+    error_message = error.inspect
+    raise error if error_handling == "Raise Error"
+  end
 
     return <<-RESULTS
     <results>
+      <result name="Handler Error Message">#{escape(error_message)}</result>
     </results>
     RESULTS
   end

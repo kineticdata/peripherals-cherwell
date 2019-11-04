@@ -8,6 +8,7 @@
     'enable_debug_logging'=>'yes'
   },
   'parameters' => {
+    'error_handling' => 'Error Message',
     'login_id' => ''
     'login_id_type' => 'Internalx'
   }
