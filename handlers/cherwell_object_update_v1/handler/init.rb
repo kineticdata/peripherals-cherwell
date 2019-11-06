@@ -94,6 +94,13 @@ class CherwellObjectUpdateV1
   rescue RestClient::ResourceNotFound => error
     error_message = error.inspect
     raise "404 Not Found: Make sure the 'server', 'api_route'. and 'api_parameters' are valid inputs: #{error.http_body}."
+  rescue RestClient::ExceptionWithResponse => e
+        begin
+          error_message = e.response
+        rescue
+          error_message = e.inspect
+        end
+        raise e if error_handling == "Raise Error"
   rescue RestClient::Exception => error
     error_message = error.inspect
     raise error if error_handling == "Raise Error"
