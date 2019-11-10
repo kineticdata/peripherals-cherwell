@@ -24,56 +24,70 @@ class CherwellUserRetrieveV1
   end
 
   def execute
-    # Retrieve an access token from Cherwell
-    resp = RestClient.post(
-      @info_values['api_location']+"/token",
-      {
-        "grant_type" => "password",
-        "client_id" => @info_values['client_id'],
-        "client_secret" => @info_values['client_secret'],
-        "username" => @info_values['username'],
-        "password" => @info_values['password']
-      }
-    )
-
-    resource = RestClient::Resource.new(@info_values['api_location'], {:headers =>
-      {
-        :authorization => "Bearer #{JSON.parse(resp.body)["access_token"]}",
-        :content_type => "application/json",
-        :accept => "application/json"
-      }
-    })
-
-    # Retrieve the business object id
+    error_handling  = @parameters["error_handling"]
+    error_message = ""
+    
     begin
+      # Retrieve an access token from Cherwell
+      resp = RestClient.post(
+        @info_values['api_location']+"/token",
+        {
+          "grant_type" => "password",
+          "client_id" => @info_values['client_id'],
+          "client_secret" => @info_values['client_secret'],
+          "username" => @info_values['username'],
+          "password" => @info_values['password']
+        }
+      )
+
+      resource = RestClient::Resource.new(@info_values['api_location'], {:headers =>
+        {
+          :authorization => "Bearer #{JSON.parse(resp.body)["access_token"]}",
+          :content_type => "application/json",
+          :accept => "application/json"
+        }
+      })
+
+      # Retrieve the business object id
       resp2 = resource["/api/V1/getuserbyloginid/loginid/#{CGI::escape(@parameters['login_id'])}"].get
       object = JSON.parse(resp2.body)
-    rescue RestClient::ExceptionWithResponse => e
-      if e.message == "500 Internal Server Error" && JSON.parse(e.response)['Message'].start_with?("RECORDNOTFOUND")
-        message = "User #{@parameters['login_id']} not found"
-      else
-        raise
-      end
-    end
 
-    # Move the fields from a list to a map of {displayName: value}
-    if object && !object.empty?
-      fields = {}
-      object["fields"].each { |f|
-        if !fields[f["displayName"]].nil?
-          fields[f["displayName"]] = f["value"]
+      # Move the fields from a list to a map of {displayName: value}
+      if object && !object.empty?
+        fields = {}
+        object["fields"].each { |f|
+          if !fields[f["displayName"]].nil?
+            fields[f["displayName"]] = f["value"]
+          else
+            fields[f["name"]] = f["value"]
+          end
+        }
+        object["fields"] = fields
+      else
+        object={}
+      end
+    rescue RestClient::ExceptionWithResponse => error
+      begin
+        if error.message == "500 Internal Server Error" && JSON.parse(error.response)['Message'].start_with?("RECORDNOTFOUND")
+          error_message = "User not found (#{@parameters['login_id']})"
         else
-          fields[f["name"]] = f["value"]
+          error_message = JSON.parse(error.response)['Message']
         end
-      }
-      object["fields"] = fields
-    else
-      object={}
+      rescue
+        error_message = error.inspect
+      end
+      raise error if error_handling == "Raise Error"
+    rescue RestClient::Exception => error
+      error_message = error.inspect
+      raise error if error_handling == "Raise Error"
+    rescue Exception => error
+      error_message = error.inspect
+      raise error if error_handling == "Raise Error"
     end
 
     return <<-RESULTS
     <results>
-      <result name="Message">#{escape(message || "")}</result>
+      <result name="Message">#{escape(error_message)}</result>
       <result name="User JSON">#{escape(object.to_json)}</result>
     </results>
     RESULTS

@@ -10,6 +10,6 @@
   'parameters' => {
     'error_handling' => 'Error Message',
     'login_id' => ''
-    'login_id_type' => 'Internalx'
+    'login_id_type' => 'Internal'
   }
 }

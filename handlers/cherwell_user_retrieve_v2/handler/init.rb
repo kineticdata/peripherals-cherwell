@@ -24,63 +24,76 @@ class CherwellUserRetrieveV2
   end
 
   def execute
-
     error_handling  = @parameters["error_handling"]
     error_message = ""
 
-    # Validate Login ID grant_type
-    if !(['Internal','Windows'].include?(@parameters['login_id_type'].capitalize))
-      error_message = "Login ID Type '#{@parameters['login_id_type']}' does not match a valid option of 'Internal' or 'Windows'."
-      raise error if error_handling == "Raise Error"
-    end
-
-    # Retrieve an access token from Cherwell
-    resp = RestClient.post(
-      @info_values['api_location']+"/token",
-      {
-        "grant_type" => "password",
-        "client_id" => @info_values['client_id'],
-        "client_secret" => @info_values['client_secret'],
-        "username" => @info_values['username'],
-        "password" => @info_values['password']
-      }
-    )
-
-    resource = RestClient::Resource.new(@info_values['api_location'], {:headers =>
-      {
-        :authorization => "Bearer #{JSON.parse(resp.body)["access_token"]}",
-        :content_type => "application/json",
-        :accept => "application/json"
-      }
-    })
-
-    # Retrieve the business object id
     begin
-      resp2 = resource["/api/V2/getuserbyloginid?loginid=#{CGI::escape(@parameters['login_id'])}&loginidtype=#{@parameters['login_id_type']}"].get
-      object = JSON.parse(resp2.body)
-    rescue RestClient::ExceptionWithResponse => e
-        error_message = "User #{@parameters['login_id']} not found"
-        raise e if error_handling == "Raise Error"
-    end
+      # Validate Login ID grant_type
+      if !(['Internal','Windows'].include?(@parameters['login_id_type'].capitalize))
+        error_message = "Check inputs: Login ID Type '#{@parameters['login_id_type']}' does not match a valid option of 'Internal' or 'Windows'."
+        raise error_message if error_handling == "Raise Error"
+      else
+        # Retrieve an access token from Cherwell
+        resp = RestClient.post(
+          @info_values['api_location']+"/token",
+          {
+            "grant_type" => "password",
+            "client_id" => @info_values['client_id'],
+            "client_secret" => @info_values['client_secret'],
+            "username" => @info_values['username'],
+            "password" => @info_values['password']
+          }
+        )
 
-    # Move the fields from a list to a map of {displayName: value}
-    if object && !object.empty?
-      fields = {}
-      object["fields"].each { |f|
-        if !fields[f["displayName"]].nil?
-          fields[f["displayName"]] = f["value"]
+        resource = RestClient::Resource.new(@info_values['api_location'], {:headers =>
+          {
+            :authorization => "Bearer #{JSON.parse(resp.body)["access_token"]}",
+            :content_type => "application/json",
+            :accept => "application/json"
+          }
+        })
+
+        # Retrieve the business object id
+        resp2 = resource["/api/V2/getuserbyloginid?loginid=#{CGI::escape(@parameters['login_id'])}&loginidtype=#{@parameters['login_id_type']}"].get
+        object = JSON.parse(resp2.body)
+
+        # Move the fields from a list to a map of {displayName: value}
+        if object && !object.empty?
+          fields = {}
+          object["fields"].each { |f|
+            if !fields[f["displayName"]].nil?
+              fields[f["displayName"]] = f["value"]
+            else
+              fields[f["name"]] = f["value"]
+            end
+          }
+          object["fields"] = fields
         else
-          fields[f["name"]] = f["value"]
+          object={}
         end
-      }
-      object["fields"] = fields
-    else
-      object={}
+      end
+    rescue RestClient::ExceptionWithResponse => error
+      begin
+        if error.message == "500 Internal Server Error" && JSON.parse(error.response)['Message'].start_with?("RECORDNOTFOUND")
+          error_message = "User not found (#{@parameters['login_id']})"
+        else
+          error_message = JSON.parse(error.response)['Message']
+        end
+      rescue
+        error_message = error.inspect
+      end
+      raise error if error_handling == "Raise Error"
+    rescue RestClient::Exception => error
+      error_message = error.inspect
+      raise error if error_handling == "Raise Error"
+    rescue Exception => error
+      error_message = error.inspect
+      raise error if error_handling == "Raise Error"
     end
 
     return <<-RESULTS
     <results>
-      <result name="Handler Error Message">#{escape(message || "")}</result>
+      <result name="Handler Error Message">#{escape(error_message)}</result>
       <result name="User JSON">#{escape(object.to_json)}</result>
     </results>
     RESULTS

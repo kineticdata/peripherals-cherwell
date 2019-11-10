@@ -2,16 +2,21 @@
 Generically retrieves a Cherwell object
 
 === Parameters
+[Error Handling]
+    Determine what to return if an error is encountered.
 [Object Name]
   Readable name of the object to retrieve (ie. Incident).
 [Object Id]
   Id of the object to be retrieved.
 
 === Sample Configuration
+Error Handling:         Error Message
 Object Name:            Incident
 Object Id:              47285
 
 === Results
+[Handler Error Message]
+    Error message if an error was encountered and Error Handling is set to "Error Message".
 [Object JSON]
   A JSON representation of the object that matches the id.
 

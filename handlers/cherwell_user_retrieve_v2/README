@@ -15,7 +15,8 @@ Login Id Type:       Internal
 
 === Results
 [Handler Error Message]
-  Will include "User <provided login id> not found" if the login it provided is not found.
+  Will include "User not found (<provided login id>)" if the login it provided is not found,
+  otherwise any other error.
 [User JSON]
   A JSON representation of the user that matches the id.  Will be an empty hash if a user is not found.
 

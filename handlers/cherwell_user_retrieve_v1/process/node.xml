@@ -8,6 +8,8 @@
     <visible>true</visible>
     <deferrable>false</deferrable>
     <parameters>
+        <parameter id="error_handling" label="Error Handling" required="true"
+          tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
         <parameter id="login_id" label="Login Id" required="true"
           tooltip="Internal Cherwell Login ID of the user record to retrieve."/>
     </parameters>
@@ -21,11 +23,13 @@
             <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
         </infos>
         <parameters>
+            <parameter name="error_handling">&lt;%= @parameters.has_key?("error_handling") ?
+            @parameters["error_handling"] : "Raise Error" %&gt;</parameter>
             <parameter name="login_id">&lt;%= @parameters['login_id'] %&gt;</parameter>
         </parameters>
     </handler>
     <results format="xml">
-        <result name="Message"></result>
+        <result name="Handler Error Message"></result>
         <result name="User JSON"></result>
     </results>
 </taskDefinition>

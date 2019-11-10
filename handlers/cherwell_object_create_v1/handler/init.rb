@@ -88,8 +88,6 @@ class CherwellObjectCreateV1
         raise error if error_handling == "Raise Error"
       end
 
-
-
       # Create the new object using the business object id and the template field
       resp = resource["/api/V1/savebusinessobject"].post({
         "busObId" => bus_obj_id,
@@ -99,7 +97,17 @@ class CherwellObjectCreateV1
   rescue RestClient::ResourceNotFound => error
     error_message = error.inspect
     raise "404 Not Found: Make sure the 'server', 'api_route'. and 'api_parameters' are valid inputs: #{error.http_body}."
+  rescue RestClient::ExceptionWithResponse => error
+    begin
+      error_message = error.response
+    rescue
+      error_message = error.inspect
+    end
+    raise error if error_handling == "Raise Error"
   rescue RestClient::Exception => error
+    error_message = error.inspect
+    raise error if error_handling == "Raise Error"
+  rescue Exception => error
     error_message = error.inspect
     raise error if error_handling == "Raise Error"
   end
