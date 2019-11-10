@@ -2,6 +2,8 @@
 Generically updates a Cherwell object
 
 === Parameters
+[Error Handling]
+    Determine what to return if an error is encountered.
 [Object Name]
   Readable name of the object to retrieve (ie. Incident).
 [Object Id]
@@ -11,12 +13,14 @@ Generically updates a Cherwell object
   with
 
 === Sample Configuration
+Error Handling:               Error Message
 Object Name:            Incident
 Object Id:              47285
 Object JSON:            {"Description": "Update from a Task Handler"}
 
 === Results
-This handler returns no results
+[Handler Error Message]
+    Error message if an error was encountered and Error Handling is set to "Error Message".
 
 === Detailed Description
 This handler generically updates a Cherwell object using an inputted JSON representation to

@@ -8,6 +8,7 @@
     'enable_debug_logging'=>'yes'
   },
   'parameters' => {
+    'error_handling' => 'Error Message',
     'object_name' => 'Incident',
     'fields' => 'Status,Description,Short Description',
     'filters' => '{"Description": "Updating from Kinetic Task Handler"}',

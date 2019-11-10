@@ -8,9 +8,11 @@
     <visible>true</visible>
     <deferrable>false</deferrable>
     <parameters>
-        <parameter id="object_name" label="Object Name" required="true"
+      <parameter id="error_handling" label="Error Handling" required="true"
+      tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
+      <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object to update (ie. Incident)."/>
-          <parameter id="object_update" label="Object Update" required="true"
+        <parameter id="object_id" label="Object Id" required="true"
           tooltip="Public id for the object that should be updated.."/>
         <parameter id="object_json" label="Object JSON" required="true"
           tooltip="A JSON representation of the displayName/values for the fields that the object should be updated with."/>
@@ -25,11 +27,14 @@
             <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
         </infos>
         <parameters>
-            <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
+          <parameter name="error_handling">&lt;%= @parameters.has_key?("error_handling") ?
+          @parameters["error_handling"] : "Raise Error" %&gt;</parameter>
+          <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
             <parameter name="object_id">&lt;%= @parameters['object_id'] %&gt;</parameter>
             <parameter name="object_json">&lt;%= @parameters['object_json'] %&gt;</parameter>
         </parameters>
     </handler>
     <results format="xml">
+      <result name="Handler Error Message"/>
     </results>
 </taskDefinition>

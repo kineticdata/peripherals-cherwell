@@ -8,6 +8,8 @@
     <visible>true</visible>
     <deferrable>false</deferrable>
     <parameters>
+        <parameter id="error_handling" label="Error Handling" required="true"
+        tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
         <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object to retrieve (ie. Incident)."/>
         <parameter id="object_json" label="Object JSON" required="true"
@@ -23,11 +25,14 @@
             <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
         </infos>
         <parameters>
+            <parameter name="error_handling">&lt;%= @parameters.has_key?("error_handling") ?
+            @parameters["error_handling"] : "Raise Error" %&gt;</parameter>
             <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
             <parameter name="object_json">&lt;%= @parameters['object_json'] %&gt;</parameter>
         </parameters>
     </handler>
     <results format="xml">
+        <result name="Handler Error Message"/>
         <result name="Object Id"></result>
     </results>
 </taskDefinition>

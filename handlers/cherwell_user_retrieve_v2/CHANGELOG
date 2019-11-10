@@ -1,0 +1,8 @@
+Cherwell Object Retrieve V2(2019-11-4)
+* Added error message Handling
+
+Cherwell Object Retrieve V2 (2019-10-26)
+* Uses Cherwell API V2, which includes the loginidtype input parameter.
+
+Cherwell Object Retrieve V1 (2019-10-26)
+* Initial version.  See README for details.

@@ -24,44 +24,70 @@ class CherwellObjectRetrieveV1
   end
 
   def execute
-    # Retrieve an access token from Cherwell
-    resp = RestClient.post(
-      @info_values['api_location']+"/token",
-      {
-        "grant_type" => "password",
-        "client_id" => @info_values['client_id'],
-        "client_secret" => @info_values['client_secret'],
-        "username" => @info_values['username'],
-        "password" => @info_values['password']
-      }
-    )
+    error_handling  = @parameters["error_handling"]
+    error_message = ""
 
-    resource = RestClient::Resource.new(@info_values['api_location'], {:headers =>
-      {
-        :authorization => "Bearer #{JSON.parse(resp.body)["access_token"]}",
-        :content_type => "application/json",
-        :accept => "application/json"
-      }
-    })
+    begin
+      # Retrieve an access token from Cherwell
+      resp = RestClient.post(
+        @info_values['api_location']+"/token",
+        {
+          "grant_type" => "password",
+          "client_id" => @info_values['client_id'],
+          "client_secret" => @info_values['client_secret'],
+          "username" => @info_values['username'],
+          "password" => @info_values['password']
+        }
+      )
 
-    # Retrieve the business object id
-    resp = resource["/api/V1/getbusinessobjectsummary/busobname/#{@parameters['object_name']}"].get
-    objects = JSON.parse(resp.body)
-    raise "'#{@parameters['object_name']}' does not appear to be a valid object name (no results found when searching for busobname)" if objects.empty?
-    bus_obj_id = objects[0]["busObId"]
+      resource = RestClient::Resource.new(@info_values['api_location'], {:headers =>
+        {
+          :authorization => "Bearer #{JSON.parse(resp.body)["access_token"]}",
+          :content_type => "application/json",
+          :accept => "application/json"
+        }
+      })
 
-    # Retrieve the object based on the business object id and the inputted object id
-    resp = resource["/api/V1/getbusinessobject/busobid/#{bus_obj_id}/publicid/#{@parameters['object_id']}"].get
+      # Retrieve the business object id
+      resp = resource["/api/V1/getbusinessobjectsummary/busobname/#{@parameters['object_name']}"].get
+      objects = JSON.parse(resp.body)
+      if objects.empty?
+        error_message = "'#{@parameters['object_name']}' does not appear to be a valid object name (no results found when searching for busobname)"
+        raise "#{error_message}" if error_handling == "Raise Error"
+      else
+        bus_obj_id = objects[0]["busObId"]
 
-    object = JSON.parse(resp.body)
-    # Move the fields from a list to a map of {displayName: value}
-    fields = {}
-    object["fields"].each { |f| fields[f["displayName"]] = f["value"]}
-    object["fields"] = fields
+        # Retrieve the object based on the business object id and the inputted object id
+        resp = resource["/api/V1/getbusinessobject/busobid/#{bus_obj_id}/publicid/#{@parameters['object_id']}"].get
+
+        object = JSON.parse(resp.body)
+        # Move the fields from a list to a map of {displayName: value}
+        fields = {}
+        object["fields"].each { |f| fields[f["displayName"]] = f["value"]}
+        object["fields"] = fields
+      end
+    rescue RestClient::ResourceNotFound => error
+      error_message = error.inspect
+      raise "404 Not Found: Make sure the 'server', 'api_route'. and 'api_parameters' are valid inputs: #{error.http_body}." if error_handling == "Raise Error"
+    rescue RestClient::ExceptionWithResponse => error
+      begin
+        error_message = error.response
+      rescue
+        error_message = error.inspect
+      end
+      raise error if error_handling == "Raise Error"
+    rescue RestClient::Exception => error
+      error_message = error.inspect
+      raise error if error_handling == "Raise Error"
+    rescue Exception => error
+      error_message = error.inspect
+      raise error if error_handling == "Raise Error"
+    end
 
     return <<-RESULTS
     <results>
-      <result name="Object JSON">#{escape(object.to_json)}</result>
+      <result name="Handler Error Message">#{escape(error_message)}</result>
+      <result name="Object JSON">#{escape(begin object.to_json rescue nil end)}</result>
     </results>
     RESULTS
   end
