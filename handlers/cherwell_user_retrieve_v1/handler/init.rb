@@ -26,11 +26,11 @@ class CherwellUserRetrieveV1
   def execute
     error_handling  = @parameters["error_handling"]
     error_message = ""
-    
+
     begin
       # Retrieve an access token from Cherwell
       resp = RestClient.post(
-        @info_values['api_location']+"/token",
+        @info_values['api_location']+"/token?auth_mode=#{@info_values['auth_mode']}",
         {
           "grant_type" => "password",
           "client_id" => @info_values['client_id'],
