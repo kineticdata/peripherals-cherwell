@@ -26,6 +26,7 @@
             <info name="client_secret">&lt;%= @info['client_secret'] %&gt;</info>
             <info name="username">&lt;%= @info['username'] %&gt;</info>
             <info name="password">&lt;%= @info["password"] %&gt;</info>
+            <info name="auth_mode">&lt;%= @info["auth_mode"] %&gt;</info>
             <info name="enable_debug_logging">&lt;%= @info['enable_debug_logging'] %&gt;</info>
         </infos>
         <parameters>
