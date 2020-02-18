@@ -63,7 +63,12 @@ class CherwellObjectUpdateV1
 
       begin
         new_fields = JSON.parse(@parameters['object_json'])
+      rescue
+        error_message = "Error encountered while attempting to parse the Object JSON parameter values."
+        raise error_message if error_handling == "Raise Error"
+      end
 
+      if error_message.to_s.empty?
         # Assign the inputted field values into template_fields which will be the fields that will be
         # passed to the create call
         new_field_display_names = new_fields.keys
@@ -87,10 +92,8 @@ class CherwellObjectUpdateV1
           "busObPublicId" => @parameters['object_id'],
           "fields" => body_fields
         }.to_json)
-        # puts resp.body
-      rescue
-        error_message = "Error encountered while attempting to parse the Object JSON parameter values."
-        raise error_message if error_handling == "Raise Error"
+        #puts resp.body
+        
       end
     rescue RestClient::ResourceNotFound => error
       error_message = error.inspect
