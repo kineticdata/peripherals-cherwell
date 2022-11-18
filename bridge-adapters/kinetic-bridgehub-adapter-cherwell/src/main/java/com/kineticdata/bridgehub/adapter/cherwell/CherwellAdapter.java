@@ -49,34 +49,8 @@ public class CherwellAdapter implements BridgeAdapter {
      *--------------------------------------------------------------------------------------------*/
     public static Map<String,AdapterMapping> MAPPINGS 
         = new HashMap<String,AdapterMapping>() {{
-        put("Contact", new AdapterMapping("Contact", "Data",
-            CherwellAdapter::pathDefault));
-        put("Contact Profile", new AdapterMapping("Contact Profile", "Data",
-            CherwellAdapter::pathDefault));
-        put("User", new AdapterMapping("User", "Data",
-            CherwellAdapter::pathDefault));
-        put("Incident", new AdapterMapping("Incident", "Data",
-            CherwellAdapter::pathDefault));
-        put("Service Request", new AdapterMapping("Service Request", "Data",
-            CherwellAdapter::pathDefault));
-        put("Action", new AdapterMapping("Action", "Data",
-            CherwellAdapter::pathDefault));
-        put("Task", new AdapterMapping("Task", "Data",
-            CherwellAdapter::pathDefault));
-        put("Device", new AdapterMapping("Device", "Data",
-            CherwellAdapter::pathDefault));
-        put("Job", new AdapterMapping("Job", "Data",
-            CherwellAdapter::pathDefault));
-        put("Managed Service", new AdapterMapping("Managed Service", "Data",
-            CherwellAdapter::pathDefault));
-        put("Job Report", new AdapterMapping("Job Report", "Data",
-            CherwellAdapter::pathDefault));
-        put("Statistic", new AdapterMapping("Statistic", "Data",
-            CherwellAdapter::pathDefault));
-        put("Customer Balance", new AdapterMapping("Customer Balance", "Data",
-            CherwellAdapter::pathDefault));
-        put("Product", new AdapterMapping("Product", "Data",
-            CherwellAdapter::pathDefault));
+        put("Teams", new AdapterMapping("Teams", "teams",
+            CherwellAdapter::pathTeams));
         put("Adhoc", new AdapterMapping("Adhoc", "",
             CherwellAdapter::pathAdhoc));
     }};
@@ -124,6 +98,8 @@ public class CherwellAdapter implements BridgeAdapter {
     private final CherwellQualificationParser parser;
     private CherwellApiHelper apiHelper;
     
+    // Constants
+    static String PATH = "/api";    
 
     /*---------------------------------------------------------------------------------------------
      * SETUP METHODS
@@ -188,13 +164,8 @@ public class CherwellAdapter implements BridgeAdapter {
         Map<String, String> parameters = getParameters(
             parser.parse(request.getQuery(),request.getParameters()), mapping);
         
-        parameters.put("GetTotal", "true");
-        
         // Path builder functions may mutate the parameters Map;
         String path = mapping.getPathbuilder().apply(structureList, parameters);
-        
-        // Access and remove X-User Parameter
-        String xUserHeader = getXUser(parameters);
         
         Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
        
@@ -202,9 +173,8 @@ public class CherwellAdapter implements BridgeAdapter {
         JSONObject responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
         
         // Get the number of elements in the returned array
-        Long tempCount = (Long)responseObject.get("Total");
-        Integer count = 0;
-        count = (int) tempCount.intValue();
+        JSONArray teamsArray = (JSONArray) responseObject.get(mapping.getAccessor());
+        Integer count = teamsArray.size();
 
         // Create and return a count object that contains the count
         return new Count(count);
@@ -238,8 +208,6 @@ public class CherwellAdapter implements BridgeAdapter {
         // mapping for Adhoc or on the mapping for all other structures.
         String accessor = getAccessor(mapping, parameters);
         
-        // Access and remove X-User Parameter
-        String xUserHeader = getXUser(parameters);
         
         Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
 
@@ -316,9 +284,6 @@ public class CherwellAdapter implements BridgeAdapter {
         // mapping for Adhoc or on the mapping for all other structures.
         String accessor = getAccessor(mapping, parameters);
         
-        // Access and remove X-User Parameter
-        String xUserHeader = getXUser(parameters);
-        
         Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
         
         // Retrieve the objects based on the structure from the source
@@ -388,18 +353,6 @@ public class CherwellAdapter implements BridgeAdapter {
         }
         
         return fields;
-    }
-    
-    protected String getXUser(Map<String, String> parameters) throws BridgeError {
-        String xUserHeader;
-            if (parameters.containsKey("xUser")) {
-                xUserHeader = parameters.get("xUser");
-                parameters.remove("xUser");
-            } else {
-                throw new BridgeError("xUser parameter is required.");
-            }
-        
-            return xUserHeader;
     }
     
     /**
@@ -571,61 +524,16 @@ public class CherwellAdapter implements BridgeAdapter {
      * @throws BridgeError 
      * 
      */
-    protected static String pathDefault(List<String> structureList,
+    protected static String pathTeams(List<String> structureList,
         Map<String, String> parameters) throws BridgeError {
         
-        String path = "";
-        
-        switch (structureList.get(0)) {
-            case "Contact":
-                path = "/contact";
-                break;
-            case "Contact Profile":
-                path = "/contactprofile";
-                break;
-            case "User":
-                path = "/user";
-                break;
-            case "Incident":
-                path = "/incident";
-                break;
-            case "Service Request":
-                path = "/servicerequest";
-                break;
-            case "Action":
-                path = "/action";
-                break;
-            case "Task":
-                path = "/task";
-                break;
-            case "Device":
-                path = "/device";
-                break;
-            case "Job":
-                path = "/job";
-                break;
-            case "Managed Service":
-                path = "/managedservice";
-                break;
-            case "Job Report":
-                path = "/jobreport";
-                break;
-            case "Statistic":
-                path = "/statistic";
-                break;
-            case "Customer Balance":
-                path = "/customerbalance";
-                break;
-            case "Product":
-                path = "/product";
-                break;
-            default:
-                throw new BridgeError("Structure must exist.");
-        }
+        String path = PATH;
         
         if (parameters.containsKey("id")) {
-            path = String.format("%s/%s", path, parameters.get("id"));
+            path += "/V1/getteam/" + parameters.get("id");
             parameters.remove("id");
+        } else {
+            path += "/V1/getteams";
         }
         
         return path;

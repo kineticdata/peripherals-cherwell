@@ -125,6 +125,7 @@ public class Cherwell_HelperMethodTest {
         assertNotNull(error);
     }
     
+    /*
     @Test
     public void test_default_path() throws Exception {        
         AdapterMapping mapper = new AdapterMapping("", "",
@@ -190,4 +191,5 @@ public class Cherwell_HelperMethodTest {
         path = mapper.getPathbuilder().apply(Arrays.asList("Product"), parameters);        
         assertEquals("/product", path);
     }
+    */
 }

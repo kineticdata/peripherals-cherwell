@@ -46,7 +46,7 @@ public class CherwellApiHelper {
         
     public JSONObject executeGetRequest (String path) throws BridgeError{
         
-        String url = baseUrl + "/api/" + path;
+        String url = baseUrl + path;
         JSONObject output;      
         // System time used to measure the request/response time
         long start = System.currentTimeMillis();

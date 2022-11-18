@@ -42,11 +42,10 @@ public class CherwellTest extends BridgeAdapterTestBase {
         List<String> fields = Arrays.asList("Total");
         request.setFields(fields);
 
-        request.setStructure("Contact");
-        request.setQuery("xUser=<%=parameter[\"X-User\"]%>");
+        request.setStructure("Teams");
+        request.setQuery("");
         
         Map parameters = new HashMap();
-        parameters.put("X-User", "{\"UserName\":\"kineticadmin1@kinetic.com\",\"PrimaryContactID\":104903,\"CCWebUserID\":3346,\"DisplayName\":\"Admin1, Kinetic \",\"TimeZoneCode\":35,\"IsPrimary\":false,\"ContactID\":237647,\"UserType\":\"Administrator\",\"CID\":\"DDX\"}");
         request.setParameters(parameters);
         
         Count count = null;
@@ -58,19 +57,6 @@ public class CherwellTest extends BridgeAdapterTestBase {
 
         assertNull(error);
         assertTrue(count.getValue() > 0);
-        
-        request.setStructure("Adhoc");
-        request.setQuery("/contact?xUser=<%=parameter[\"X-User\"]%>");
-        
-        Count adhocCount = null;
-        try {
-            adhocCount = getAdapter().count(request);
-        } catch (BridgeError e) {
-            error = e;
-        }
-        
-        assertNull(error);
-        assertTrue(Objects.equals(adhocCount.getValue(), count.getValue()));
     }
 
     @Test
@@ -334,24 +320,22 @@ public class CherwellTest extends BridgeAdapterTestBase {
     }
     
     @Test
-    public void test_user() throws Exception {
+    public void test_retrieve() throws Exception {
         BridgeError error = null;
 
         assertNull(error);
 
         // Create the Bridge Request
         List<String> fields = new ArrayList<String>();
-        fields.add("$.Contact.ContactID");
-        fields.add("$.Contact.FirstName");
-        fields.add("$.Contact.LastName");
+        fields.add("name");
+        fields.add("teamId");
         
         BridgeRequest request = new BridgeRequest();
-        request.setStructure("User");
+        request.setStructure("Teams");
         request.setFields(fields);
-        request.setQuery("id=<%=parameter[\"User ID\"]%> & xUser=<%=parameter[\"X-User\"]%>");
+        request.setQuery("id=<%=parameter[\"Team ID\"]%>");
         Map parameters = new HashMap();
-        parameters.put("User ID", "3346");
-        parameters.put("X-User", "{\"UserName\":\"kineticadmin1@kinetic.com\",\"PrimaryContactID\":104903,\"CCWebUserID\":3346,\"DisplayName\":\"Admin1, Kinetic \",\"TimeZoneCode\":35,\"IsPrimary\":false,\"ContactID\":237647,\"UserType\":\"Administrator\",\"CID\":\"DDX\"}");
+        parameters.put("Team ID", "9365b4e90592c81e3b7a024555a6c0094ba77e8773");
         request.setParameters(parameters);
 
         Record record = null;
@@ -362,20 +346,7 @@ public class CherwellTest extends BridgeAdapterTestBase {
         }
 
         assertNull(error);
-        assertTrue(record.getRecord().containsKey("$.Contact.FirstName"));
-        
-        request.setStructure("Adhoc");
-        request.setQuery("/user/<%=parameter[\"User ID\"]%>?accessor=Data & xUser=<%=parameter[\"X-User\"]%>");
-        
-        Record adhocRecord = null;
-        try {
-            adhocRecord = getAdapter().retrieve(request);
-        } catch (BridgeError e) {
-            error = e;
-        }
-        
-        assertNull(error);
-        assertTrue(record.getRecord().containsKey("$.Contact.FirstName"));
+        assertTrue(record.getRecord().containsKey("name"));
     }
     
     @Test
