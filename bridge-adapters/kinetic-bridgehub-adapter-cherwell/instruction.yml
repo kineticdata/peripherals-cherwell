@@ -1,0 +1,88 @@
+## YAML Template.
+# File structure
+#  Sections = Structures
+#  title Scalar is the sections title.
+#  description Scalar is the text associated with that section.
+#  configs Scalar is mapped to Sequences. The lists are relative to the sections. 
+#   list items have a name Scalar and a description Scalar.
+#  name Scalar is name of the configs property.
+#  notes Scalar is mapped to Sequences. It's additional text added to a section
+#  example Scalar is mapped to Sequences. Each element in the sequence has a 
+#  name and value
+#  value Scalar is a primitive
+---
+title: Overview
+description: >
+  This article covers the configuration of the harvest bridge adapter.
+...
+---
+title: What's New
+description: >
+  The harvest bridge adapter leverages the v2 Harvest API.
+...
+---
+title: Set Up
+description: >
+  The following is a list of config options to set up the harvest bridge adapter.
+  Some options are required and some are optional.
+configs:
+  - 
+    name: Access Token
+    description: >
+      A personal access token created using the 'Developers' section of the
+      Harvest Id.
+  -
+    name: Account Id
+    description: >
+      The Id assigned to the organization by Harvest also found in the 
+      'Developers' section of the Harvest Id.
+...
+---
+title: Usage
+description: >
+  This section covers valid Structures, Fields, and Queries.
+configs:
+  -
+    name: Structures
+    list: ["Clients","Projects","Tasks", "Task Assignments", "Users",
+    "User Assignments", "Time Entries"]
+  -
+    name: Fields
+    description: >
+      The available fields are dependant on the Structure chosen.  For more
+      information on the available fields please visit the Harvest v2 API
+      documentation. https://help.getharvest.com/api-v2/ Each API endpoint
+      defines the return object with attributes.  The attributes are the
+      available fields.
+    notes:
+      - >
+        It's important to know that fields that have complex return type will be
+        in JSON format.
+  -
+    name: Queries
+    description: >
+      Available query options are listed for Each API endpoint in the Harvest v2
+      API documentation. https://help.getharvest.com/api-v2/ The options are in 
+      a table under the Parameter header.
+...
+---
+    title: Example
+    description: >
+      This section shows sample configuration values.
+    example:
+      - 
+        name: Access Token
+        value: 635809.pt.aOOjd6ZUux2CJVVZxg5erwGjLfZyereVgJtEPCoHutDaaBokiDtniK5hd3zSROl0gEqSlo6dYoGIpwj78Ft4tQ
+      -
+        name: Account Id
+        value: 234677
+      -
+        name: Structure
+        value: Projects
+      -
+        name: Fields
+        value: id,client
+      -
+        name: Query
+        value: is_active=true&client_id=2319544
+...
