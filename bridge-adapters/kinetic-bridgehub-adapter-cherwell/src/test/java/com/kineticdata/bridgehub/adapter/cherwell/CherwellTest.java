@@ -58,7 +58,68 @@ public class CherwellTest extends BridgeAdapterTestBase {
         assertNull(error);
         assertTrue(count.getValue() > 0);
     }
+    
+    @Test
+    public void test_retrieve() throws Exception {
+        BridgeError error = null;
 
+        assertNull(error);
+
+        // Create the Bridge Request
+        List<String> fields = new ArrayList<String>();
+        fields.add("name");
+        fields.add("teamId");
+        
+        BridgeRequest request = new BridgeRequest();
+        request.setStructure("Teams");
+        request.setFields(fields);
+        request.setQuery("id=<%=parameter[\"Team ID\"]%>");
+        Map parameters = new HashMap();
+        parameters.put("Team ID", "9365b4e90592c81e3b7a024555a6c0094ba77e8773");
+        request.setParameters(parameters);
+
+        Record record = null;
+        try {
+            record = getAdapter().retrieve(request);
+        } catch (BridgeError e) {
+            error = e;
+        }
+
+        assertNull(error);
+        assertTrue(record.getRecord().containsKey("name"));
+    }
+    
+    @Test
+    public void test_search_no_params() throws Exception {
+        BridgeError error = null;
+
+        // Create the Bridge Request
+        List<String> fields = new ArrayList<String>();
+        fields.add("teamId");
+        fields.add("teamName");
+
+        BridgeRequest request = new BridgeRequest();
+        request.setStructure("Teams");
+        request.setFields(fields);
+        request.setQuery("");
+                
+        Map parameters = new HashMap();
+        request.setParameters(parameters);
+
+        RecordList list = null;
+        try {
+            list = getAdapter().search(request);
+        } catch (BridgeError e) {
+            error = e;
+        }
+
+        assertNull(error);
+        assertTrue(list.getRecords().size() > 0);
+    }
+    
+    // Tests above have been executed for Cherwell Adapter
+
+    /*
     @Test
     public void test_count_param() throws Exception {
         BridgeError error = null;
@@ -87,64 +148,8 @@ public class CherwellTest extends BridgeAdapterTestBase {
         assertNull(error);
         assertTrue(count.getValue() > 0);
     }
-
-    @Test
-    public void test_search() throws Exception {
-        BridgeError error = null;
-
-        // Create the Bridge Request
-        List<String> fields = new ArrayList<String>();
-        fields.add("FirstName");
-        fields.add("LastName");
-
-        BridgeRequest request = new BridgeRequest();
-        request.setStructure("Contact");
-        request.setFields(fields);
-        request.setQuery("GetTotal=<%=parameter[\"Get Total\"]%>&PageToken=<%=parameter[\"Page Token\"]%>&xUser=<%=parameter[\"X-User\"]%>");
-                
-        Map parameters = new HashMap();
-        parameters.put("Get Total", "true");
-        parameters.put("Page Token", "");
-        parameters.put("X-User", "{\"UserName\":\"kineticadmin1@kinetic.com\",\"PrimaryContactID\":104903,\"CCWebUserID\":3346,\"DisplayName\":\"Admin1, Kinetic \",\"TimeZoneCode\":35,\"IsPrimary\":false,\"ContactID\":237647,\"UserType\":\"Administrator\",\"CID\":\"DDX\"}");
-        request.setParameters(parameters);
-
-        RecordList list = null;
-        try {
-            list = getAdapter().search(request);
-        } catch (BridgeError e) {
-            error = e;
-        }
-
-        assertNull(error);
-        assertTrue(list.getRecords().size() > 0);
-        
-        request.setStructure("Adhoc");
-        request.setQuery("/contact?accessor=Data&GetTotal=<%=parameter[\"Get Total\"]%> & xUser=<%=parameter[\"X-User\"]%>");
-        
-        RecordList adhocList = null;
-        try {
-            adhocList = getAdapter().search(request);
-        } catch (BridgeError e) {
-            error = e;
-        }
-        
-        assertNull(error);
-        assertTrue(list.getRecords().size() == adhocList.getRecords().size());
-        
-        request.setStructure("Adhoc");
-        
-        list = null;
-        try {
-            list = getAdapter().search(request);
-        } catch (BridgeError e) {
-            error = e;
-        }
-
-        assertNull(error);
-        assertTrue(list.getRecords().size() > 0);
-    }
     
-     @Test
+    @Test
     public void test_json_path() throws Exception {
          BridgeError error = null;
         
@@ -320,36 +325,6 @@ public class CherwellTest extends BridgeAdapterTestBase {
     }
     
     @Test
-    public void test_retrieve() throws Exception {
-        BridgeError error = null;
-
-        assertNull(error);
-
-        // Create the Bridge Request
-        List<String> fields = new ArrayList<String>();
-        fields.add("name");
-        fields.add("teamId");
-        
-        BridgeRequest request = new BridgeRequest();
-        request.setStructure("Teams");
-        request.setFields(fields);
-        request.setQuery("id=<%=parameter[\"Team ID\"]%>");
-        Map parameters = new HashMap();
-        parameters.put("Team ID", "9365b4e90592c81e3b7a024555a6c0094ba77e8773");
-        request.setParameters(parameters);
-
-        Record record = null;
-        try {
-            record = getAdapter().retrieve(request);
-        } catch (BridgeError e) {
-            error = e;
-        }
-
-        assertNull(error);
-        assertTrue(record.getRecord().containsKey("name"));
-    }
-    
-    @Test
     public void test_order_by() throws Exception {
         BridgeError error = null;
         
@@ -493,4 +468,5 @@ public class CherwellTest extends BridgeAdapterTestBase {
         assertNull(error);
         assertTrue(list.getRecords().size() > 0);
     }
+    */
 }
