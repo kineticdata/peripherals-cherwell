@@ -51,8 +51,11 @@ public class CherwellAdapter implements BridgeAdapter {
         = new HashMap<String,AdapterMapping>() {{
         put("Teams", new AdapterMapping("Teams", "teams",
             CherwellAdapter::pathTeams));
+        put("Saved Search", new AdapterMapping("Saved Search", "businessObjects",
+                CherwellAdapter::pathSavedSearch));
         put("Adhoc", new AdapterMapping("Adhoc", "",
             CherwellAdapter::pathAdhoc));
+
     }};
 
     /*----------------------------------------------------------------------------------------------
@@ -272,10 +275,10 @@ public class CherwellAdapter implements BridgeAdapter {
         
         // Pagination Logic
         // If PageToken is already a parameter, ignore metadata.
-        String nextPage = metadata.get("next_page");
-        if (!parameters.containsKey("PageToken") && nextPage != null && !nextPage.isBlank()) {
-            parameters.put("PageToken", metadata.get("next_page"));
-        }
+//        String nextPage = metadata.get("next_page");
+//        if (!parameters.containsKey("PageToken") && nextPage != null && !nextPage) {
+//            parameters.put("PageToken", metadata.get("next_page"));
+//        }
                 
         // Path builder functions may mutate the parameters Map;
         String path = mapping.getPathbuilder().apply(structureList, parameters);
@@ -433,7 +436,7 @@ public class CherwellAdapter implements BridgeAdapter {
      * This helper is intended to abstract the parser get parameters from the core
      * methods.
      * 
-     * @param request
+     * @param query
      * @param mapping
      * @return
      * @throws BridgeError
@@ -538,7 +541,78 @@ public class CherwellAdapter implements BridgeAdapter {
         
         return path;
     }
-    
+
+    /**
+     * Saved Search > Internal ID
+     *
+     * @param structureList
+     * @param parameters
+     * @return
+     * @throws BridgeError
+     */
+    protected static String pathSavedSearch(List<String> structureList, Map<String, String> parameters) throws BridgeError {
+        String path = PATH;
+
+        switch (structureList.get(1)) {
+            case "Internal ID":
+                if (!(parameters.containsKey("association")
+                        && parameters.containsKey("scope")
+                        && parameters.containsKey("scopeowner")
+                        && parameters.containsKey("searchid"))) {
+                    throw new BridgeError("The Saved Search > Internal ID structure requires \"association\", \"scope\"," +
+                            " \"scopeowner\", and \"searchid\"");
+                }
+
+                path += String.format("/V1/getsearchresults/association/%s/scope/%s/scopeowner/%s/searchid/%s",
+                        parameters.get("association"), parameters.get("scope"), parameters.get("scopeowner"),
+                        parameters.get("searchid"));
+                parameters.remove("association");
+                parameters.remove("scope");
+                parameters.remove("scopeowner");
+                parameters.remove("searchid");
+                break;
+            default:
+                throw new BridgeError(String.format("The %s structure requires a substructure: \"Internal ID\"", structureList.get(0)));
+        }
+
+        return path;
+    }
+
+    /**
+     * Saved Search > Results V1
+     *
+     * @param structureList
+     * @param parameters
+     * @return
+     * @throws BridgeError
+     */
+    protected static String pathSearchResultsV1(List<String> structureList, Map<String, String> parameters) throws BridgeError {
+        String path = PATH;
+
+        switch (structureList.get(1)) {
+            case "Internal ID":
+                if (!(parameters.containsKey("association")
+                        && parameters.containsKey("scope")
+                        && parameters.containsKey("searchname"))) {
+                    throw new BridgeError("The Saved Search > Internal ID structure requires \"association\", \"scope\"," +
+                            "  and \"searchname\"");
+                }
+
+                path += String.format("/V1/storedsearches/association/%s/scope/%s/searchname/%s",
+                        parameters.get("association"), parameters.get("scope"), parameters.get("scopeowner"),
+                        parameters.get("searchid"));
+                parameters.remove("association");
+                parameters.remove("scope");
+                parameters.remove("scopeowner");
+                parameters.remove("searchid");
+                break;
+            default:
+                throw new BridgeError(String.format("The %s structure requires a substructure: \"Internal ID\"", structureList.get(0)));
+        }
+
+        return path;
+    }
+
     /**
      * Build path for Adhoc structure.
      * 
