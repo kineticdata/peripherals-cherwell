@@ -117,19 +117,21 @@ public class CherwellTest extends BridgeAdapterTestBase {
     }
 
     @Test
-    public void test_search() throws Exception {
+    public void test_saved_search_by_id() throws Exception {
         BridgeError error = null;
 
         // Create the Bridge Request
+        BridgeRequest request = new BridgeRequest();
+        String query = "association=<%=parameter[\"Association\"]%>&scope=<%=parameter[\"Scope\"]%>&" +
+                "scopeowner=<%=parameter[\"Scope Owner\"]%>&";
+        // Run Saved Search By Internal Id
+        request.setStructure("Saved Search > Internal ID");
+        request.setQuery(query + "searchid=<%=parameter[\"Search Id\"]%>");
+
         List<String> fields = new ArrayList<String>();
         fields.add("busObId");
         fields.add("fields");
-
-        BridgeRequest request = new BridgeRequest();
-        request.setStructure("Saved Search > Internal ID");
         request.setFields(fields);
-        request.setQuery("association=<%=parameter[\"Association\"]%>&scope=<%=parameter[\"Scope\"]%>&" +
-                "scopeowner=<%=parameter[\"Scope Owner\"]%>&searchid=<%=parameter[\"Search Id\"]%>");
 
         Map parameters = new HashMap();
         parameters.put("Association", "6dd53665c0c24cab86870a21cf6434ae");
@@ -139,6 +141,23 @@ public class CherwellTest extends BridgeAdapterTestBase {
         request.setParameters(parameters);
 
         RecordList list = null;
+        try {
+            list = getAdapter().search(request);
+        } catch (BridgeError e) {
+            error = e;
+        }
+
+        assertNull(error);
+        assertTrue(list.getRecords().size() > 0);
+
+        // Run Saved Search By Name
+        request.setStructure("Saved Search > Name");
+        request.setQuery(query + "searchname=<%=parameter[\"Search Name\"]%>");
+
+        parameters.remove("Search Id");
+        parameters.put("Search Name", "Cart ID Item");
+        request.setParameters(parameters);
+
         try {
             list = getAdapter().search(request);
         } catch (BridgeError e) {

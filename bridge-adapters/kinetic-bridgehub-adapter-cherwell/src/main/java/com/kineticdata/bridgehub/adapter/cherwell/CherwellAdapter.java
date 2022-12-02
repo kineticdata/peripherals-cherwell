@@ -13,6 +13,8 @@ import com.kineticdata.bridgehub.adapter.RecordList;
 import com.kineticdata.commons.v1.config.ConfigurableProperty;
 import com.kineticdata.commons.v1.config.ConfigurablePropertyMap;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -489,10 +491,15 @@ public class CherwellAdapter implements BridgeAdapter {
     }
     
     protected String getUrl (String path,
-        Map<String, NameValuePair> parameters) {
-        
-        return String.format("%s?%s", path, 
-            URLEncodedUtils.format(parameters.values(), Charset.forName("UTF-8")));
+        Map<String, NameValuePair> parameters) throws BridgeError {
+        String url = "";
+        try {
+            url = String.format("%s?%s", URLEncoder.encode(path, "UTF-8"),
+                    URLEncodedUtils.format(parameters.values(), Charset.forName("UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+            throw new BridgeError("An exception encoding the path: ", e);
+        }
+        return url;
     }
     
     /**
@@ -555,59 +562,51 @@ public class CherwellAdapter implements BridgeAdapter {
 
         switch (structureList.get(1)) {
             case "Internal ID":
+            case "Name":
+
+                // Search by Internal Id or Name
+                String searchType = "";
+                if (structureList.get(1).equals("Internal ID")) {
+                    searchType = "searchid";
+                } else {
+                    searchType = "searchname";
+                }
+
                 if (!(parameters.containsKey("association")
                         && parameters.containsKey("scope")
                         && parameters.containsKey("scopeowner")
-                        && parameters.containsKey("searchid"))) {
-                    throw new BridgeError("The Saved Search > Internal ID structure requires \"association\", \"scope\"," +
-                            " \"scopeowner\", and \"searchid\"");
+                        && parameters.containsKey(searchType))) {
+                    throw new BridgeError("The Saved Search > "+ structureList.get(1) +" structure requires \"association\", \"scope\"," +
+                            " \"scopeowner\", and \""+ searchType +"\"");
                 }
 
-                path += String.format("/V1/getsearchresults/association/%s/scope/%s/scopeowner/%s/searchid/%s",
+                path += String.format("/V1/getsearchresults/association/%s/scope/%s/scopeowner/%s/%s/%s",
                         parameters.get("association"), parameters.get("scope"), parameters.get("scopeowner"),
-                        parameters.get("searchid"));
+                        searchType, parameters.get(searchType));
                 parameters.remove("association");
                 parameters.remove("scope");
                 parameters.remove("scopeowner");
-                parameters.remove("searchid");
+                parameters.remove(searchType);
                 break;
-            default:
-                throw new BridgeError(String.format("The %s structure requires a substructure: \"Internal ID\"", structureList.get(0)));
-        }
 
-        return path;
-    }
-
-    /**
-     * Saved Search > Results V1
-     *
-     * @param structureList
-     * @param parameters
-     * @return
-     * @throws BridgeError
-     */
-    protected static String pathSearchResultsV1(List<String> structureList, Map<String, String> parameters) throws BridgeError {
-        String path = PATH;
-
-        switch (structureList.get(1)) {
-            case "Internal ID":
-                if (!(parameters.containsKey("association")
-                        && parameters.containsKey("scope")
-                        && parameters.containsKey("searchname"))) {
-                    throw new BridgeError("The Saved Search > Internal ID structure requires \"association\", \"scope\"," +
-                            "  and \"searchname\"");
+            case "Results V1":
+                if (!(parameters.containsKey("scope")
+                        && parameters.containsKey("associationName")
+                        && parameters.containsKey("searchName"))) {
+                    throw new BridgeError("The Saved Search > Results V1 structure requires \"scope\", \"associationName\"," +
+                            " and \"searchName\"");
                 }
 
-                path += String.format("/V1/storedsearches/association/%s/scope/%s/searchname/%s",
-                        parameters.get("association"), parameters.get("scope"), parameters.get("scopeowner"),
-                        parameters.get("searchid"));
-                parameters.remove("association");
+                path += String.format("/V1/storedsearches/%s/scope/%s/associationName/%s/searchName/%s",
+                        parameters.get("scope"), parameters.get("associationName"), parameters.get("searchName"));
+                parameters.remove("associationName");
                 parameters.remove("scope");
-                parameters.remove("scopeowner");
-                parameters.remove("searchid");
+                parameters.remove("searchName");
                 break;
+
             default:
-                throw new BridgeError(String.format("The %s structure requires a substructure: \"Internal ID\"", structureList.get(0)));
+                // To be configured with each new case
+                throw new BridgeError(String.format("The %s structure requires a substructure: \"Internal ID\", \"Results V1 \"", structureList.get(0)));
         }
 
         return path;
