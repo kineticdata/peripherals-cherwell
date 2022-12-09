@@ -25,12 +25,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.LoggerFactory;
 
 public class CherwellAdapter implements BridgeAdapter {
@@ -167,7 +171,7 @@ public class CherwellAdapter implements BridgeAdapter {
         AdapterMapping mapping = getMapping(structureList.get(0));
         
         Map<String, String> parameters = getParameters(
-            parser.parse(request.getQuery(),request.getParameters()), mapping);
+            parser.parse(request.getQuery(),request.getParameters()), structureList);
         
         // Path builder functions may mutate the parameters Map;
         String path = mapping.getPathbuilder().apply(structureList, parameters);
@@ -204,7 +208,7 @@ public class CherwellAdapter implements BridgeAdapter {
         AdapterMapping mapping = getMapping(structureList.get(0));
         
         Map<String, String> parameters = getParameters(
-            parser.parse(request.getQuery(),request.getParameters()), mapping);
+            parser.parse(request.getQuery(),request.getParameters()), structureList);
         
         // Path builder functions may mutate the parameters Map;
         String path = mapping.getPathbuilder().apply(structureList, parameters);
@@ -264,7 +268,7 @@ public class CherwellAdapter implements BridgeAdapter {
         AdapterMapping mapping = getMapping(structureList.get(0));
         
         Map<String, String> parameters = getParameters(
-            parser.parse(request.getQuery(),request.getParameters()), mapping);
+            parser.parse(request.getQuery(),request.getParameters()), structureList);
         
         Map<String, String> metadata = request.getMetadata() != null ?
                 request.getMetadata() : new HashMap<>();
@@ -281,20 +285,34 @@ public class CherwellAdapter implements BridgeAdapter {
 //        if (!parameters.containsKey("PageToken") && nextPage != null && !nextPage) {
 //            parameters.put("PageToken", metadata.get("next_page"));
 //        }
-                
-        // Path builder functions may mutate the parameters Map;
-        String path = mapping.getPathbuilder().apply(structureList, parameters);
-        
-        // Accessor values is either passed as a parameter in the qualification
-        // mapping for Adhoc or on the mapping for all other structures.
-        String accessor = getAccessor(mapping, parameters);
-        
-        Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
-        
-        // Retrieve the objects based on the structure from the source
-        JSONObject responseObject = apiHelper.executeGetRequest(getUrl(path, 
-            parameterMap));
-        
+
+        String accessor = null;
+        JSONObject responseObject = null;
+
+        // If the Structure is Adhoc and there is more than one element in the list take another code path to support filtered search.
+        if (structureList.get(0).equals("Adhoc") && structureList.size() > 1) {
+            // confirm the request has required property
+            checkRequiredParamForStruct("dataRequest", parameters, structureList);
+
+            // Build path to fetch business object by name.
+            String path = mapping.getPathbuilder().apply(structureList, parameters);
+
+            responseObject = getSearchByFilter(path, parameters);
+            accessor = "businessObjects";
+        } else {
+            // Path builder functions may mutate the parameters Map.
+            String path = mapping.getPathbuilder().apply(structureList, parameters);
+
+            // Accessor values is either passed as a parameter in the qualification
+            // mapping for Adhoc or on the mapping for all other structures.
+            accessor = getAccessor(mapping, parameters);
+
+            Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
+
+            // Retrieve the objects based on the structure from the source
+            responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
+        }
+
         JSONArray responseArray = new JSONArray();
         if (responseObject.containsKey(accessor)) {
             responseArray = getResponseData(responseObject.get(accessor));
@@ -329,7 +347,88 @@ public class CherwellAdapter implements BridgeAdapter {
     /*--------------------------------------------------------------------------
      * HELPER METHODS
      *------------------------------------------------------------------------*/
-    
+    private JSONObject getSearchByFilter (String path, Map<String, String> parameters) throws BridgeError {
+        JSONObject responseObject = null;
+
+        // Move "dataRequest" into a variable and JSON parse and remove parameter.
+        JSONParser jsonParser = new JSONParser();
+        JSONObject dataRequest = null;
+        try {
+            dataRequest = (JSONObject) jsonParser.parse(parameters.get("dataRequest"));
+            parameters.remove("dataRequest");
+        } catch (ParseException e) {
+            // Throws new BridgeError
+            e.printStackTrace();
+        }
+
+        Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
+
+        /************************* Retrieve Business Object *****************************/
+        // Retrieve business object to get the business object id.
+        responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
+
+        // Only expecting a single element to be returned
+        JSONObject businessObject = (JSONObject) ((JSONArray)responseObject.get("value")).get(0);
+        String busObId = (String) businessObject.get("busObId");
+
+        // Build body to be used in next request
+        JSONObject businessObjectBody = new JSONObject() {{
+            put("busObId", busObId);
+            put("includeAll", true);
+        }};
+
+        // Add the business object id to be used in final search
+        dataRequest.put("busObId", busObId);
+        /*********************************************************************************/
+
+        /************************* Retrieve Business Template ****************************/
+        // The data request filters have field names but need field ids.  Users of the adapter will not know ids so
+        // the adapter needs to look them up.
+
+        // The path is always static because the request is a POST
+        path = PATH + "/v1/getbusinessobjecttemplate";
+
+        // TODO: Will we need parameters?
+
+        // Retrieve the businesses template
+        responseObject = apiHelper.executePostRequest(path, businessObjectBody.toJSONString());
+
+        /************** Modify the filters to be used in next request **************/
+        DocumentContext jsonContext = JsonPath.parse(responseObject);
+
+        JSONArray filters = (JSONArray) dataRequest.get("filters");
+        Stream<JSONObject> arrayStream = filters.stream().map((filterItem) -> {
+            JSONObject filterObj = (JSONObject)filterItem;
+
+            // Build JsonPath expression to get feild ids
+            String expression = String.format("$.fields[?(@.name == \"%s\" )].fieldId", filterObj.get("fieldName"));
+            String fieldId = (String)((net.minidev.json.JSONArray)  jsonContext.read(expression)).get(0);
+
+            // Add the field id to the filter object to be used in next query
+            filterObj.put("fieldId", fieldId);
+            // Remove the field name from the filter object because it is no longer needed
+            filterObj.remove("fieldName");
+
+            return filterObj;
+        });
+        JSONArray filterArray = arrayStream.collect(
+                JSONArray::new,
+                (JSONArray jsonArray1, JSONObject jsonObject) ->  jsonArray1.add(jsonObject),
+                (JSONArray jsonArray1, JSONArray jsonArray2) -> jsonArray1.addAll(jsonArray2)
+        );
+
+        // add the updated filters to the data request
+        dataRequest.put("filters", filterArray);
+        /*********************************************************************************/
+
+        /************************* Retrieve Business Template ****************************/
+        path = PATH + "/V1/getsearchresults";
+
+        return apiHelper.executePostRequest(path, dataRequest.toJSONString());
+
+        /*********************************************************************************/
+    }
+
     /**
      * Take the sort order from metadata and add it to parameters for use with
      * request.
@@ -435,18 +534,17 @@ public class CherwellAdapter implements BridgeAdapter {
     }
     
     /**
-     * This helper is intended to abstract the parser get parameters from the core
-     * methods.
+     * This helper is intended to abstract the parser get parameters from the core methods.
      * 
      * @param query
-     * @param mapping
+     * @param structureList
      * @return
      * @throws BridgeError
      */
-    protected Map<String, String> getParameters(String query, AdapterMapping mapping) throws BridgeError {
+    protected Map<String, String> getParameters(String query, List<String> structureList) throws BridgeError {
 
         Map<String, String> parameters = new HashMap<>();
-        if (mapping.getStructure() == "Adhoc") {
+        if (structureList.get(0) == "Adhoc" && structureList.size() == 1) {
             // Adhoc qualifications are two segments. ie path?queryParameters
             String[] segments = query.split("[?]", 2);
 
@@ -464,9 +562,8 @@ public class CherwellAdapter implements BridgeAdapter {
     }
 
     /**
-     * This method checks that the structure on the request matches on in the
-     * Mapping internal class. Mappings map directly to the adapters supported
-     * Structures.
+     * This method checks that the structure on the request matches on in the Mapping internal class.
+     * Mappings map directly to the adapters supported Structures.
      * 
      * @param structure
      * @return Mapping
@@ -490,16 +587,8 @@ public class CherwellAdapter implements BridgeAdapter {
         return parameterMap;
     }
     
-    protected String getUrl (String path,
-        Map<String, NameValuePair> parameters) throws BridgeError {
-        String url = "";
-        try {
-            url = String.format("%s?%s", URLEncoder.encode(path, "UTF-8"),
-                    URLEncodedUtils.format(parameters.values(), Charset.forName("UTF-8")));
-        } catch (UnsupportedEncodingException e) {
-            throw new BridgeError("An exception encoding the path: ", e);
-        }
-        return url;
+    protected String getUrl (String path, Map<String, NameValuePair> parameters) {
+        return String.format("%s?%s", path, URLEncodedUtils.format(parameters.values(), Charset.forName("UTF-8")));
     }
     
     /**
@@ -620,10 +709,16 @@ public class CherwellAdapter implements BridgeAdapter {
      * @return
      * @throws BridgeError 
      */
-    protected static String pathAdhoc(List<String> structureList, 
-        Map<String, String> parameters) throws BridgeError {
-        
-        return parameters.get("adapterPath");
+    protected static String pathAdhoc(List<String> structureList, Map<String, String> parameters) throws BridgeError {
+        String path = null;
+
+        if (structureList.size() > 1) {
+            path = String.format("%s/V1/getbusinessobjectsummary/busobname/%s", PATH, structureList.get(1));
+        } else {
+            path = parameters.get("adapterPath");
+        }
+
+        return path;
     }
 
     /**
@@ -640,8 +735,7 @@ public class CherwellAdapter implements BridgeAdapter {
         
         if (!parameters.containsKey(param)) {
             String structure = String.join(" > ", structureList);
-            throw new BridgeError(String.format("The %s structure requires %s"
-                + "parameter.", structure, param));
+            throw new BridgeError(String.format("The %s structure requires %s parameter.", structure, param));
         }
     }
 }

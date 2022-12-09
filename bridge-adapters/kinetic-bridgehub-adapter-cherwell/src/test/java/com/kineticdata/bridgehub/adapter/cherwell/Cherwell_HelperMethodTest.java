@@ -30,31 +30,7 @@ import org.junit.Test;
  *
  * @author chadrehm
  */
-public class Cherwell_HelperMethodTest { 
-    @Test
-    public void test_get_parameters() throws BridgeError {
-        CherwellAdapter helper = new CherwellAdapter();
-        
-        AdapterMapping mapping = helper.getMapping("Contacts");
-        
-        Map<String, String> parameters = 
-            helper.getParameters("foo=bar&fizz=buzz", mapping);
-        
-        Map<String, String> parametersControl = new HashMap<String, String>() {{
-            put("foo","bar");
-            put("fizz","buzz");
-        }};
-        
-        assertTrue(parameters.equals(parametersControl));
-        
-        mapping = helper.getMapping("Adhoc");
-        
-        parameters = helper.getParameters("_noOp_?foo=bar&fizz=buzz", mapping);
-        
-        parametersControl.put("adapterPath", "_noOp_");
-        
-        assertTrue(parameters.equals(parametersControl));
-    }
+public class Cherwell_HelperMethodTest {
     
     @Test
     public void test_get_mapping_error() throws BridgeError {
@@ -124,72 +100,44 @@ public class Cherwell_HelperMethodTest {
         
         assertNotNull(error);
     }
-    
-    /*
+
     @Test
-    public void test_default_path() throws Exception {        
-        AdapterMapping mapper = new AdapterMapping("", "",
-            CherwellAdapter::pathDefault);
-        
-        Map<String, String> parameters = new HashMap();
-        
-        // Testing Contact endpoint path
-        String path = mapper.getPathbuilder().apply(Arrays.asList("Contact"), parameters);
-        assertEquals("/contact", path);
-        
-        // Testing "id" parameter code
-        parameters.put("id", "12345");
-        path = mapper.getPathbuilder().apply(Arrays.asList("Contact"), parameters);
-        parameters.remove("id");
-        assertEquals("/contact/12345", path);
-        
-        // Testing User endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("User"), parameters);        
-        assertEquals("/user", path);
-        
-        // Testing Incident endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Incident"), parameters);        
-        assertEquals("/incident", path);
-        
-        // Testing Service Request endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Service Request"), parameters);        
-        assertEquals("/servicerequest", path);
-        
-        // Testing Action endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Action"), parameters);        
-        assertEquals("/action", path);
-        
-        // Testing Task endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Task"), parameters);        
-        assertEquals("/task", path);
-        
-        // Testing Device endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Device"), parameters);        
-        assertEquals("/device", path);
-        
-        // Testing Job endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Job"), parameters);        
-        assertEquals("/job", path);
-        
-        // Testing Managed Service endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Managed Service"), parameters);        
-        assertEquals("/managedservice", path);
-        
-        // Testing Job Report endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Job Report"), parameters);        
-        assertEquals("/jobreport", path);
-        
-        // Testing Statistic endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Statistic"), parameters);        
-        assertEquals("/statistic", path);
-        
-        // Testing Customer Balance endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Customer Balance"), parameters);        
-        assertEquals("/customerbalance", path);
-        
-        // Testing Product endpoint path
-        path = mapper.getPathbuilder().apply(Arrays.asList("Product"), parameters);        
-        assertEquals("/product", path);
+    public void test_ad_hoc_build_path() {
+        CherwellAdapter helper = new CherwellAdapter();
+        AdapterMapping mapping = null;
+        String path = null;
+
+        try {
+            mapping = helper.getMapping("Adhoc");
+        } catch (BridgeError e) {
+            assertNull(e);
+        }
+
+        List<String> structureList = new ArrayList<String>(){{
+            add("Adhoc");
+            add("Incident");
+        }};
+
+        Map<String, String> parameters = new HashMap<String, String>(){{
+            put("dataRequest", "{\"foo\":\"bar\",\"bizz\":[{\"bazz\":1,\"fizz\":true}]}");
+        }};
+
+        try {
+            path = mapping.getPathbuilder().apply(structureList, parameters);
+        } catch (BridgeError e) {
+            assertNull(e);
+        }
+
+        assertNotNull(path);
+        assertEquals("/api/V1/getbusinessobjectsummary/busobname/Incident", path);
+
+        // check error thrown with missing parameter
+        parameters.remove("dataRequest");
+
+        try {
+            mapping.getPathbuilder().apply(structureList, parameters);
+        } catch (BridgeError e) {
+            assertNotNull(e);
+        }
     }
-    */
 }

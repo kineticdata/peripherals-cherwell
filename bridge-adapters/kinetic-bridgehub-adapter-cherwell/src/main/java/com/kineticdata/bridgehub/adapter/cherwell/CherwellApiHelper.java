@@ -11,6 +11,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -87,6 +89,54 @@ public class CherwellApiHelper {
         
         return output;
     }
+
+    public JSONObject executePostRequest (String path, String body) throws BridgeError{
+
+        String url = baseUrl + path;
+        JSONObject output;
+        // System time used to measure the request/response time
+        long start = System.currentTimeMillis();
+
+        try (
+                CloseableHttpClient client = HttpClients.createDefault()
+        ) {
+            HttpResponse response;
+            HttpPost post = new HttpPost(url);
+
+            // Append HTTP BASIC Authorization header to HttpGet call
+            post.setHeader("Content-Type", "application/json");
+            post.setHeader("Accept", "application/json");
+            post.setHeader("Authorization", "Bearer " + token);
+
+            String payload = body;
+            StringEntity stringEntity = new StringEntity(payload);
+            post.setEntity(stringEntity);
+
+            response = client.execute(post);
+            LOGGER.debug("Recieved response from \"{}\" in {}ms.",
+                    url,
+                    System.currentTimeMillis()-start);
+
+            int responseCode = response.getStatusLine().getStatusCode();
+            LOGGER.trace("Request response code: " + responseCode);
+
+            HttpEntity entity = response.getEntity();
+
+            // Confirm that response is a JSON object
+            output = parseResponse(EntityUtils.toString(entity));
+
+            // Handle all other failed repsonses
+            if (responseCode >= 400) {
+                handleFailedRequest(responseCode);
+            }
+        }
+        catch (IOException e) {
+            throw new BridgeError(
+                    "Unable to make a connection to the Harvest service server.", e);
+        }
+
+        return output;
+    }
     
     // Get a JWT to be used with subsequent requests.
     public void getToken () throws BridgeError {
@@ -153,7 +203,16 @@ public class CherwellApiHelper {
         
         JSONObject responseObj = new JSONObject();
         try {
-            responseObj = (JSONObject)JSONValue.parseWithException(output);
+            Object obj = JSONValue.parseWithException(output);
+
+            if (obj.getClass().getSimpleName().equals("JSONObject")) {
+                responseObj = (JSONObject) obj;
+            } else {
+                // wrap the response in a JSONObject, likely a JSONArray
+                responseObj.put("value", obj);
+                responseObj.put("type", obj.getClass().getSimpleName());
+            }
+
             // A message in the response means that the request failed with a 400
             if(responseObj.containsKey("message")) {
                 throw new BridgeError(String.format("The server responded with: "
