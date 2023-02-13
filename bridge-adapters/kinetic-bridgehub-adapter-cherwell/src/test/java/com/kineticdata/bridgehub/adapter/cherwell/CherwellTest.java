@@ -117,16 +117,16 @@ public class CherwellTest extends BridgeAdapterTestBase {
     }
 
     @Test
-    public void test_saved_search_by_id() throws Exception {
+    public void test_run_saved_search_by_id() throws Exception {
         BridgeError error = null;
 
         // Create the Bridge Request
         BridgeRequest request = new BridgeRequest();
         String query = "association=<%=parameter[\"Association\"]%>&scope=<%=parameter[\"Scope\"]%>&" +
-                "scopeowner=<%=parameter[\"Scope Owner\"]%>&";
+                "scopeowner=<%=parameter[\"Scope Owner\"]%>&searchid=<%=parameter[\"Search Id\"]%>";
         // Run Saved Search By Internal Id
         request.setStructure("Saved Search > Internal ID");
-        request.setQuery(query + "searchid=<%=parameter[\"Search Id\"]%>");
+        request.setQuery(query);
 
         List<String> fields = new ArrayList<String>();
         fields.add("busObId");
@@ -149,15 +149,35 @@ public class CherwellTest extends BridgeAdapterTestBase {
 
         assertNull(error);
         assertTrue(list.getRecords().size() > 0);
+    }
+
+    @Test
+    public void test_run_saved_search_by_name() throws Exception {
+        BridgeError error = null;
+
+        // Create the Bridge Request
+        BridgeRequest request = new BridgeRequest();
+        String query = "association=<%=parameter[\"Association\"]%>&scope=<%=parameter[\"Scope\"]%>&" +
+                "scopeowner=<%=parameter[\"Scope Owner\"]%>&searchName=<%=parameter[\"Search Name\"]%>" +
+                "&includeschema=false&resultsAsSimpleResultsList=true";
 
         // Run Saved Search By Name
         request.setStructure("Saved Search > Name");
-        request.setQuery(query + "searchname=<%=parameter[\"Search Name\"]%>");
+        request.setQuery(query);
 
-        parameters.remove("Search Id");
-        parameters.put("Search Name", "Cart ID Item");
+        List<String> fields = new ArrayList<String>();
+        fields.add("busObId");
+        fields.add("fields");
+        request.setFields(fields);
+
+        Map parameters = new HashMap();
+        parameters.put("Association", "6dd53665c0c24cab86870a21cf6434ae");
+        parameters.put("Scope", "User");
+        parameters.put("Scope Owner", "948e322dbe86cb3e6b122e4650b038b854eefe69b4");
+        parameters.put("Search Name", "Test Saved Search");
         request.setParameters(parameters);
 
+        RecordList list = null;
         try {
             list = getAdapter().search(request);
         } catch (BridgeError e) {
@@ -168,8 +188,11 @@ public class CherwellTest extends BridgeAdapterTestBase {
         assertTrue(list.getRecords().size() > 0);
     }
 
+    /*
+     *  This test has checks two cases.  Both V1 and V2 are tested with the same config.
+     */
     @Test
-    public void test_saved_search_v1() throws Exception {
+    public void test_saved_search_by_version() throws Exception {
         BridgeError error = null;
 
         // Create the Bridge Request
@@ -180,16 +203,27 @@ public class CherwellTest extends BridgeAdapterTestBase {
         BridgeRequest request = new BridgeRequest();
         request.setStructure("Saved Search > Results V1");
         request.setFields(fields);
-        request.setQuery("association=<%=parameter[\"Association\"]%>&scope=<%=parameter[\"Scope\"]%>&" +
-                "searchname=<%=parameter[\"Search Name\"]%>");
+        request.setQuery("associationName=<%=parameter[\"Association Name\"]%>&scope=<%=parameter[\"Scope\"]%>&" +
+                "searchName=<%=parameter[\"Search Name\"]%>");
 
         Map parameters = new HashMap();
-        parameters.put("Association", "6dd53665c0c24cab86870a21cf6434ae");
+        parameters.put("Association Name", "Incident");
         parameters.put("Scope", "Global");
-        parameters.put("Search Name", "Cart ID Item");
+        parameters.put("Search Name", "All Assigned Incidents");
         request.setParameters(parameters);
 
         RecordList list = null;
+        try {
+            list = getAdapter().search(request);
+        } catch (BridgeError e) {
+            error = e;
+        }
+
+        assertNull(error);
+        assertTrue(list.getRecords().size() > 0);
+
+        request.setStructure("Saved Search > Results V2");
+
         try {
             list = getAdapter().search(request);
         } catch (BridgeError e) {
@@ -238,5 +272,79 @@ public class CherwellTest extends BridgeAdapterTestBase {
 
         assertNull(error);
         assertTrue(list.getRecords().size() > 0);
+    }
+
+    @Test
+    public void test_ad_hoc_filter_2() throws Exception {
+        BridgeError error = null;
+
+        // Create the Bridge Request
+        List<String> fields = new ArrayList<String>();
+        fields.add("$.fields[?(@.name == \"IncidentID\")].value");
+        fields.add("$.fields[?(@.name == \"RecID\")].value");
+
+        BridgeRequest request = new BridgeRequest();
+        request.setStructure("Adhoc > Incident");
+        request.setFields(fields);
+        request.setQuery(
+            "dataRequest={" +
+                "\"filters\":[{" +
+                    "\"fieldName\":\"IncidentID\"," +
+                    "\"operator\":\"eq\"," +
+                    "\"value\":\"<%=parameter[\"Incident ID\"]%>\"" +
+                "}]," +
+                "\"fields\":[" +
+                    "\"BO:6dd53665c0c24cab86870a21cf6434ae\"," +
+                    "\"FI:fa03d51b709e4a6eb2d52885b2ef7e04\"," +
+                    "\"BO:6dd53665c0c24cab86870a21cf6434ae\"," +
+                    "\"FI:6ae282c55e8e4266ae66ffc070c17fa3\"" +
+                "]" +
+            "}&includeschema=false&resultsAsSimpleResultsList=true");
+
+        Map parameters = new HashMap();
+        parameters.put("Incident ID", "102390");
+        request.setParameters(parameters);
+
+        RecordList list = null;
+        try {
+            list = getAdapter().search(request);
+        } catch (BridgeError e) {
+            error = e;
+        }
+
+        assertNull(error);
+        assertTrue(list.getRecords().size() > 0);
+    }
+
+    @Test
+    public void test_missing_field_exception() throws Exception {
+        RuntimeException error = null;
+
+        // Create the Bridge Request
+        List<String> fields = new ArrayList<String>();
+
+        BridgeRequest request = new BridgeRequest();
+        request.setStructure("Adhoc > Incident");
+        request.setFields(fields);
+        request.setQuery(
+                "dataRequest={" +
+                        "\"filters\":[{" +
+                        "\"fieldName\":\"foo\"," +
+                        "\"operator\":\"eq\"," +
+                        "\"value\":\"<%=parameter[\"Foo\"]%>\"" +
+                        "}]," +
+                        "}");
+
+        Map parameters = new HashMap();
+        parameters.put("Foo", "Bar");
+        request.setParameters(parameters);
+
+        try {
+            getAdapter().search(request);
+        } catch (RuntimeException e) {
+            error = e;
+        }
+
+        assertNotNull(error);
     }
 }
