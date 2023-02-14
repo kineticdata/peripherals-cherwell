@@ -270,19 +270,13 @@ public class CherwellAdapter implements BridgeAdapter {
         
         Map<String, String> metadata = request.getMetadata() != null ?
                 request.getMetadata() : new HashMap<>();
-        
+
         // If form defines sort order use it. This will overwrite $orderby in the
         // qualification mapping.
-        if (metadata.get("order") != null) {
-            parameters.put("OrderBy", addSort(metadata.get("order")));
-        }
-        
-        // Pagination Logic
-        // If PageToken is already a parameter, ignore metadata.
-//        String nextPage = metadata.get("next_page");
-//        if (!parameters.containsKey("PageToken") && nextPage != null && !nextPage) {
-//            parameters.put("PageToken", metadata.get("next_page"));
+//        if (metadata.get("order") != null) {
+//            parameters.put("OrderBy", addSort(metadata.get("order")));
 //        }
+
 
         String accessor;
         JSONObject responseObject;
@@ -298,6 +292,12 @@ public class CherwellAdapter implements BridgeAdapter {
             responseObject = getSearchByFilter(path, parameters);
             accessor = "businessObjects";
         } else {
+            // Pagination Logic
+            if (metadata.get("count") != null && metadata.get("nextPageToken") != null) {
+                parameters.put("pagesize", metadata.get("count"));
+                parameters.put("pagenumber", metadata.get("nextPageToken"));
+            }
+
             // Path builder functions may mutate the parameters Map.
             String path = mapping.getPathbuilder().apply(structureList, parameters);
 
@@ -334,9 +334,6 @@ public class CherwellAdapter implements BridgeAdapter {
                 recordList.add(record);
             }
         }
-
-        metadata.put("nextPageToken", String.valueOf(responseObject.get("NextPage")));
-        metadata.put("size", String.valueOf(responseObject.get("Total")));
         
         // Return the RecordList object
         return new RecordList(fields, recordList, metadata);

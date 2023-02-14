@@ -24,6 +24,7 @@ An adapter for interacting with some Cherwell rest api endpoints.  The adapter a
 See unit tests written for the adapter.
 
 ## Notes
+* This adapter does not support sorting using the order parameter of the bridged resource.
 * [JsonPath](https://github.com/json-path/JsonPath#path-examples) can be used to access nested values. The root of the path is the accessor for the Structure.
 * This adapter has been tested with the 1.0.3 bridgehub adapter. 
 * Pagination and sort order are not supported by the adapter, but some Cherwell source api behavior is supported.  
@@ -50,3 +51,4 @@ See unit tests written for the adapter.
   * Using the business object id the next requests gets the field ids for the business object using a POST request to the [Business Object template](https://cherwell.kineticdata.com/CherwellAPI/swagger/ui/index#!/BusinessObject/BusinessObject_GetBusinessObjectTemplateV1)
     * The field names are passed to the adapter using the `dataRequest` parameter in the bridge model Query.  In the above example **Status** is the field that will be used in the Cherwell filter search.
   * To run an ad-hoc Business Object search the `dataRequest` parameter must be provided in the bridge model qualification. An example of the dataRequest is above.  The `fieldName` property will be replaced with a `fieldId` property and the field id found from previous request.  The busObId will also be added to the dataRequest object.
+  * Adhoc filter search pagination must be supported using the bridge model qualification.
