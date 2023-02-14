@@ -1,54 +1,52 @@
-# Harvest Bridge Adapter
-An adapter for interacting with the Harvest v2 api
+# Cherwell Bridge Adapter
+An adapter for interacting with some Cherwell rest api endpoints.  The adapter authenticates using [Internal Mode](https://help.cherwell.com/bundle/cherwell_rest_api_960_help_only/page/content/system_administration/rest_api/csm_rest_oauth2_internal_authentication.html) which requires a username, password, and client id
 
 ## Configuration Values
-| Name                    | Description |
-| :---------------------- | :------------------------- |
-| Access Token            | The personal access token set up for the Harvest account |
-| Account Id              | The account id associated to the personal access token |
+| Name         | Description                                         | Example                               |
+|:-------------|:----------------------------------------------------|:--------------------------------------|
+| API Location | The domain and partial path                         | https://cherwell.acme.com/CherwellAPI |
+| Username     | The username of an integration account              | Admin                                 |
+| Password     | The password assocated with the integration account | *****                                 |
+| Client Id    | An Id created in the [CSM Administrator](https://help.cherwell.com/bundle/cherwell_rest_api_960_help_only/page/content/system_administration/rest_api/csm_rest_obtaining_client_ids.html)          | b3xxxx8e-3xx4-41d0-96f4-xxxx33e5xxxx  |
 
-## Example Configuration
-| Name | Value |
-| :---- | :--- |
-| Access Token | 555555.rt.a.34t3g45yt5h45... |
-| Account Id   | 123123 |
 
 ## Supported Structures
-| Name                    | Description |
-| :---------------------- | :------------------------- |
-| Contacts                | Get client contacts   |
-| Clients                 | Get clients   |
-| Invoices                | Get invoices   |
-| Invoice > Messages      | Get messages associated with a given invoice   |
-| Invoice > Payments      | Get payments associate with a given invoice   |
-| Invoice Item Categories | Get invoice item categories   |
-| Estimate > Messages     | Get messages associated with a given estimate   |
-| Estimates               | Get estimates   |
-| Estimate Item Categories| Get estimate item categories |
-| Tasks                   | Get tasks |
-| Time Entries            | Get time entries |
-| User Assignments        | Get projects user assignments, active and archived |
-| Task Assignments        | Get task assignments |
-| Projects                | Get projects |
-| Reports > Expenses      | Requires a report_type parameter.  Valid values are clients, projects, categories, and team. |
-| Adhoc                   | Requires an accessor parameter.  |
+| Name                         | Description                                                  |
+|:-----------------------------|:-------------------------------------------------------------|
+| Teams                        | Get a list of teams.                                         |
+| Adhoc > BUSINESS_OBJECT_NAME | Adhoc filter query. See additional details in notes section. |
+| Saved Search > Internal Id   | Run a saved search by id number.                             |
+| Saved Search > Name          | Run a saved search by name                                   |
+| Saved Search > Results V1    | Get the results of a saved search using v1 api.              |
+| Saved Search > Results V2    | Get the results of a saved search using v2 api.              |
 
 ## Configuration example
-| Structure               | Qualification Mapping      | Description |
-| :---------------------- | :------------------------- | :------------------------- |
-| Projects                |                   | Get a list of projects     |
-| Projects                | client_id=2372100 | Only return projects belonging to the client with the given ID|
-| Projects                | id=14308069          | Retrieve a single project  |
-| Users                   | id={USER_ID} | Get a user |
-| Adhoc                   | projects/{PROJECT_ID} | Retrieve a single project using Adhoc |
-| Adhoc                   | projects?accessor=projects&client_id=2372100 | Retrieve projects using Adhoc |
+See unit tests written for the adapter.
 
 ## Notes
 * [JsonPath](https://github.com/json-path/JsonPath#path-examples) can be used to access nested values. The root of the path is the accessor for the Structure.
-* This adapter has been tested with the 1.0.3 bridgehub adapter.
-* The adapter only supports personal access token authentication at this time.  
-    - To configure [personal access token](https://id.getharvest.com/)  
-    - Information on [personal access token](https://help.getharvest.com/api-v2/authentication-api/authentication/authentication/#personal-access-tokens)  
-* Pagination and sort order are not supported by the adapter, but Harvest source api behavior is supported.  
-* From more information about harvest api visit [Harvest API v2 Documentation](https://help.getharvest.com/api-v2/)
-* This adapter requires an id parameter to be passed to do a retrieve an element.
+* This adapter has been tested with the 1.0.3 bridgehub adapter. 
+* Pagination and sort order are not supported by the adapter, but some Cherwell source api behavior is supported.  
+* From more information about harvest api visit [Cherwell Documentation](https://help.cherwell.com/bundle/cherwell_rest_api_10_2_help_only/page/content/system_administration/rest_api/csm_rest_api_landing_page.html)
+
+* **Adhoc Filter search details.**  Using the Adhoc > BUSINESS_OBJECT_NAME structure will make several rest requests sequentially.  There are several requests made so that human-readable names can be used in the bridge model definition that will be replaced with ids. 
+  * Adhoc filter Structure example:
+  `Adhoc > Incident`
+  * Adhoc filter qualification example:
+  ```
+    dataRequest={
+     "filters":[{
+       "fieldName":"Status",
+       "operator":"eq",
+       "value":"Open"
+     }],
+    "includeAllFields":true,
+    "pageSize":3
+  }
+  ```
+  * `dataRequest` is a key used to pass the Adhoc Filter data request JSON object to Cherwell.
+  * The adapter will look up the business object id using the business object name with a GET request to the [Business Object summary](https://cherwell.kineticdata.com/CherwellAPI/swagger/ui/index#!/BusinessObject/BusinessObject_GetBusinessObjectSummaryByNameV1)
+    * The business object name is passed to the bridge adapter using the Structure. **Incident** in the above example configuration.
+  * Using the business object id the next requests gets the field ids for the business object using a POST request to the [Business Object template](https://cherwell.kineticdata.com/CherwellAPI/swagger/ui/index#!/BusinessObject/BusinessObject_GetBusinessObjectTemplateV1)
+    * The field names are passed to the adapter using the `dataRequest` parameter in the bridge model Query.  In the above example **Status** is the field that will be used in the Cherwell filter search.
+  * To run an ad-hoc Business Object search the `dataRequest` parameter must be provided in the bridge model qualification. An example of the dataRequest is above.  The `fieldName` property will be replaced with a `fieldId` property and the field id found from previous request.  The busObId will also be added to the dataRequest object.
