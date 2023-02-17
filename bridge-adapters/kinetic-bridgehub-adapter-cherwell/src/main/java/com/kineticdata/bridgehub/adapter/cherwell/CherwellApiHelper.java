@@ -2,22 +2,20 @@ package com.kineticdata.bridgehub.adapter.cherwell;
 
 import com.kineticdata.bridgehub.adapter.BridgeError;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
@@ -45,8 +43,16 @@ public class CherwellApiHelper {
         this.username = username;
         this.password = password;
     }
+
+    public JSONObject executeRequest (String path) throws BridgeError {
+        return executeGetRequest(path, 0);
+    }
+
+    public JSONObject executeRequest (String path, String body) throws BridgeError {
+        return executePostRequest(path, body, 0);
+    }
         
-    public JSONObject executeGetRequest (String path) throws BridgeError{
+    private JSONObject executeGetRequest (String path, int tries) throws BridgeError {
         
         String url = baseUrl + path;
         JSONObject output;      
@@ -71,6 +77,14 @@ public class CherwellApiHelper {
 
             int responseCode = response.getStatusLine().getStatusCode();
             LOGGER.trace("Request response code: " + responseCode);
+
+            // First check if token is still valid and has only attempted retry once.
+            if(responseCode == 401 && tries == 0){
+                LOGGER.debug("Retrying the request with a new authentication token.");
+                // Get a fresh token
+                getToken();
+                return executeGetRequest(path, tries++);
+            }
             
             HttpEntity entity = response.getEntity();
             
@@ -84,13 +98,13 @@ public class CherwellApiHelper {
         }
         catch (IOException e) {
             throw new BridgeError(
-                "Unable to make a connection to the Harvest service server.", e);
+                "Unable to make a connection to the Cherwell service server.", e);
         }
         
         return output;
     }
 
-    public JSONObject executePostRequest (String path, String body) throws BridgeError{
+    private JSONObject executePostRequest (String path, String body, int tries) throws BridgeError{
 
         String url = baseUrl + path;
         JSONObject output;
@@ -120,6 +134,14 @@ public class CherwellApiHelper {
             int responseCode = response.getStatusLine().getStatusCode();
             LOGGER.trace("Request response code: " + responseCode);
 
+            // First check if token is still valid and has only attempted retry once.
+            if(responseCode == 401 && tries == 0){
+                LOGGER.debug("Retrying the request with a new authentication token.");
+                // Get a fresh token
+                getToken();
+                return executePostRequest(path, body, tries++);
+            }
+
             HttpEntity entity = response.getEntity();
 
             // Confirm that response is a JSON object
@@ -132,7 +154,7 @@ public class CherwellApiHelper {
         }
         catch (IOException e) {
             throw new BridgeError(
-                    "Unable to make a connection to the Harvest service server.", e);
+                    "Unable to make a connection to the Cherwell service server.", e);
         }
 
         return output;
@@ -154,7 +176,7 @@ public class CherwellApiHelper {
             form.add(new BasicNameValuePair("password", password));
             form.add(new BasicNameValuePair("client_id", clientId));
             form.add(new BasicNameValuePair("grant_type", "password"));
-            UrlEncodedFormEntity requestEntity = new UrlEncodedFormEntity(form, Consts.UTF_8);
+            UrlEncodedFormEntity requestEntity = new UrlEncodedFormEntity(form, StandardCharsets.UTF_8);
 
             httpPost.setEntity(requestEntity);
             httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -224,7 +246,7 @@ public class CherwellApiHelper {
         } catch (BridgeError e) {
             throw e;
         } catch (Exception e) {
-            throw new BridgeError("An unexpected error has occured ", e);
+            throw new BridgeError("An unexpected error has occurred ", e);
         }
         
         return responseObj;

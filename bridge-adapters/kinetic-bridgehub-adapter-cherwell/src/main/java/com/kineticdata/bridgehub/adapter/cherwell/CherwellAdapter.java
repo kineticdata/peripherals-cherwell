@@ -15,7 +15,6 @@ import com.kineticdata.commons.v1.config.ConfigurablePropertyMap;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -177,7 +176,7 @@ public class CherwellAdapter implements BridgeAdapter {
         Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
        
         // Retrieve the objects based on the structure from the source
-        JSONObject responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
+        JSONObject responseObject = apiHelper.executeRequest(getUrl(path, parameterMap));
         
         // Get the number of elements in the returned array
         JSONArray teamsArray = (JSONArray) responseObject.get(mapping.getAccessor());
@@ -219,7 +218,7 @@ public class CherwellAdapter implements BridgeAdapter {
         Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
 
         // Retrieve the objects based on the structure from the source
-        JSONObject responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
+        JSONObject responseObject = apiHelper.executeRequest(getUrl(path, parameterMap));
         
         JSONArray responseArray;
         if (responseObject.containsKey(accessor)) {
@@ -258,7 +257,7 @@ public class CherwellAdapter implements BridgeAdapter {
         if (request.getFieldString() != null) {
             LOGGER.trace("  Fields: " + request.getFieldString());
         }
-        
+
          // parse Structure
         List<String> structureList = Arrays.asList(request.getStructure().trim()
             .split("\\s*>\\s*"));
@@ -271,18 +270,13 @@ public class CherwellAdapter implements BridgeAdapter {
         Map<String, String> metadata = request.getMetadata() != null ?
                 request.getMetadata() : new HashMap<>();
 
-        // If form defines sort order use it. This will overwrite $orderby in the
-        // qualification mapping.
-//        if (metadata.get("order") != null) {
-//            parameters.put("OrderBy", addSort(metadata.get("order")));
-//        }
-
-
         String accessor;
         JSONObject responseObject;
 
         // If the Structure is Adhoc and there is more than one element in the list take another code path to support filtered search.
         if (structureList.get(0).equals("Adhoc") && structureList.size() > 1) {
+            /* !Important! pagination is managed by platform developer for adhoc structures */
+
             // confirm the request has required property
             checkRequiredParamForStruct("dataRequest", parameters, structureList);
 
@@ -308,7 +302,9 @@ public class CherwellAdapter implements BridgeAdapter {
             Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
 
             // Retrieve the objects based on the structure from the source
-            responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
+            responseObject = apiHelper.executeRequest(getUrl(path, parameterMap));
+
+            // TODO: Pagination is odd with cherwell.  Should we update metadata?
         }
 
         JSONArray responseArray;
@@ -334,7 +330,7 @@ public class CherwellAdapter implements BridgeAdapter {
                 recordList.add(record);
             }
         }
-        
+
         // Return the RecordList object
         return new RecordList(fields, recordList, metadata);
     }
@@ -352,15 +348,14 @@ public class CherwellAdapter implements BridgeAdapter {
             dataRequest = (JSONObject) jsonParser.parse(parameters.get("dataRequest"));
             parameters.remove("dataRequest");
         } catch (ParseException e) {
-            // Throws new BridgeError
-            e.printStackTrace();
+            throw new BridgeError("There was an issue parsing the dataRequest parameter: ", e);
         }
 
         Map<String, NameValuePair> parameterMap = buildNameValuePairMap(parameters);
 
         /************************* Retrieve Business Object *****************************/
         // Retrieve business object to get the business object id.
-        responseObject = apiHelper.executeGetRequest(getUrl(path, parameterMap));
+        responseObject = apiHelper.executeRequest(getUrl(path, parameterMap));
 
         // Only expecting a single element to be returned
         JSONObject businessObject = (JSONObject) ((JSONArray)responseObject.get("value")).get(0);
@@ -386,7 +381,7 @@ public class CherwellAdapter implements BridgeAdapter {
         // TODO: Will we need parameters?
 
         // Retrieve the businesses template
-        responseObject = apiHelper.executePostRequest(path, businessObjectBody.toJSONString());
+        responseObject = apiHelper.executeRequest(path, businessObjectBody.toJSONString());
 
         /************** Modify the filters to be used in next request **************/
         DocumentContext jsonContext = JsonPath.parse(responseObject);
@@ -425,7 +420,7 @@ public class CherwellAdapter implements BridgeAdapter {
         /************************* Retrieve Business Template ****************************/
         path = PATH + "/V1/getsearchresults";
 
-        return apiHelper.executePostRequest(path, dataRequest.toJSONString());
+        return apiHelper.executeRequest(path, dataRequest.toJSONString());
 
         /*********************************************************************************/
     }
@@ -469,7 +464,7 @@ public class CherwellAdapter implements BridgeAdapter {
      */
     protected Record buildRecord (List<String> fields, JSONObject jsonobj) {
         JSONObject obj = new JSONObject();
-        DocumentContext jsonContext = JsonPath.parse(jsonobj); 
+        DocumentContext jsonContext = JsonPath.parse(jsonobj);
         
         fields.stream().forEach(field -> {
             // either use JsonPath or just add the field value.  We're assuming
@@ -589,7 +584,7 @@ public class CherwellAdapter implements BridgeAdapter {
     }
     
     protected String getUrl (String path, Map<String, NameValuePair> parameters) {
-        return String.format("%s?%s", path, URLEncodedUtils.format(parameters.values(), Charset.forName("UTF-8")));
+        return String.format("%s?%s", path, URLEncodedUtils.format(parameters.values(), StandardCharsets.UTF_8));
     }
     
     /**
@@ -612,6 +607,25 @@ public class CherwellAdapter implements BridgeAdapter {
         
         return (LinkedHashMap)uncastSortOrderItems;
     }
+
+    /**
+     * Encode values for use in URLs
+     *
+     * @param input
+     * @return
+     */
+    public static String urlEncode(String input) throws BridgeError {
+         String encodedValue = null;
+         try {
+             encodedValue = URLEncoder
+                     .encode(input, StandardCharsets.UTF_8.toString())
+                     .replace("+", "%20");
+         } catch (UnsupportedEncodingException e) {
+             throw new BridgeError("There was an error encoding the URL parameter '"+input+"': ", e);
+         }
+
+         return encodedValue;
+    }
     
     /**************************** Path Definitions ****************************/
     
@@ -625,12 +639,12 @@ public class CherwellAdapter implements BridgeAdapter {
      * 
      */
     protected static String pathTeams(List<String> structureList,
-        Map<String, String> parameters) throws BridgeError {
+        Map<String, String> parameters) throws BridgeError{
         
         String path = PATH;
         
         if (parameters.containsKey("id")) {
-            path += "/V1/getteam/" + parameters.get("id");
+            path += "/V1/getteam/" + urlEncode(parameters.get("id"));
             parameters.remove("id");
         } else {
             path += "/V1/getteams";
@@ -670,16 +684,9 @@ public class CherwellAdapter implements BridgeAdapter {
                             " \"scopeowner\", and \""+ searchType +"\"");
                 }
 
-                String searchTypeValue;
-                try {
-                    searchTypeValue = URLEncoder.encode(parameters.get(searchType), StandardCharsets.UTF_8.toString()).replace("+", "%20");
-                } catch (UnsupportedEncodingException e) {
-                    throw new BridgeError("There was an error encoding the URL parameter: ", e);
-                }
-
                 path += String.format("/V1/getsearchresults/association/%s/scope/%s/scopeowner/%s/%s/%s",
-                        parameters.get("association"), parameters.get("scope"), parameters.get("scopeowner"),
-                        searchType, searchTypeValue);
+                        urlEncode(parameters.get("association")), urlEncode(parameters.get("scope")), urlEncode(parameters.get("scopeowner")),
+                        searchType, urlEncode(parameters.get(searchType)));
                 parameters.remove("association");
                 parameters.remove("scope");
                 parameters.remove("scopeowner");
@@ -695,16 +702,9 @@ public class CherwellAdapter implements BridgeAdapter {
                             " and \"searchName\"");
                 }
 
-                String searchNameValue;
-                try {
-                    searchNameValue = URLEncoder.encode(parameters.get("searchName"), StandardCharsets.UTF_8.toString()).replace("+", "%20");
-                } catch (UnsupportedEncodingException e) {
-                    throw new BridgeError("There was an error encoding the URL parameter '"+parameters.get("searchName")+"': ", e);
-                }
-
                 path += String.format("/%s/storedsearches/%s/%s/%s",
-                        structureList.get(1).equals("Results V1") ? "V1" : "V2", parameters.get("scope"),
-                        parameters.get("associationName"), searchNameValue);
+                        structureList.get(1).equals("Results V1") ? "V1" : "V2", urlEncode(parameters.get("scope")),
+                        urlEncode(parameters.get("associationName")), urlEncode(parameters.get("searchName")));
                 parameters.remove("associationName");
                 parameters.remove("scope");
                 parameters.remove("searchName");
@@ -730,7 +730,7 @@ public class CherwellAdapter implements BridgeAdapter {
         String path = null;
 
         if (structureList.size() > 1) {
-            path = String.format("%s/V1/getbusinessobjectsummary/busobname/%s", PATH, structureList.get(1));
+            path = String.format("%s/V1/getbusinessobjectsummary/busobname/%s", PATH, urlEncode(structureList.get(1)));
         } else {
             path = parameters.get("adapterPath");
         }
