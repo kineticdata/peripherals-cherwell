@@ -7,6 +7,6 @@
   <info name="password" type="encrypted" description="Password for the specified username"></info>
   <info name="request_ce_server" description="Server URL for the Request CE Server that the Attachment will be on.">https://localhost:8080/kinetic</info>
   <info name="request_ce_username" description="Request CE username."></info>
-  <info name="request_ce_password" description="Request CE password."></info>
+  <info name="request_ce_password" type="encrypted" description="Request CE password."></info>
   <info name="enable_debug_logging" description="Enable debug logging if the value is set to 'Yes'.">No</info>
 </taskInfo>
