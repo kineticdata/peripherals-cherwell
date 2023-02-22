@@ -47,8 +47,8 @@ class CherwellObjectAttachmentUploadV1
 
     ### Retrieve the Attachment(s) from the submission and upload them to the Cherwell Business Object
     # Submission API Route including Values
-    submission_api_route = "#{@info_values['request_ce_server']}/#{@parameters['attachment_space_slug']}"+
-      "/app/api/v1/submissions/#{URI.escape(@parameters['attachment_submission_id'])}?include=values"
+    submission_api_route = "#{@info_values['request_ce_api_location']}"+
+      "/submissions/#{URI.escape(@parameters['attachment_submission_id'])}?include=values"
 
     # Retrieve the Submission Values
     submission_result = RestClient::Resource.new(
@@ -67,13 +67,13 @@ class CherwellObjectAttachmentUploadV1
         # Attachment field values are stored as arrays, one map for each file attachment
         field_value.each_index do |index|
           file_info = field_value[index]
-          attachment_download_api_route = @info_values["request_ce_server"] +
-            '/' + @parameters['attachment_space_slug'] + '/app/api/v1' +
+          attachment_download_api_route = @info_values["request_ce_api_location"] +
             '/submissions/' + URI.escape(@parameters['attachment_submission_id']) +
             '/files/' + URI.escape(@parameters['attachment_field_name']) +
             '/' + index.to_s +
             '/' + URI.escape(file_info['name']) +
             '/url'
+          puts "Attachment Download API Route: #{attachment_download_api_route}" if @enable_debug_logging
 
           # Retrieve the URL to download the attachment from Kinetic Request CE.
           # This URL will only be valid for a short amount of time before it expires
@@ -86,10 +86,15 @@ class CherwellObjectAttachmentUploadV1
 
           unless attachment_download_result.nil?
             url = JSON.parse(attachment_download_result)['url']
+            puts "File download URL: #{url}" if @enable_debug_logging
             file_info["url"] = url
 
             # Download File from Filehub
-            attach_response = RestClient.get(file_info["url"])
+            attach_response = RestClient::Resource.new(
+              file_info["url"],
+              user: @info_values["request_ce_username"],
+              password: @info_values["request_ce_password"]
+            ).get
             attach = attach_response.body
 
             # Upload the file to
