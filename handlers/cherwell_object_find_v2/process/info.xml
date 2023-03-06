@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taskInfo version="1.0">
+  <info name="api_location" description="Location of the Cherwell API (URL up to /CherwellAPI)">https://server/CherwellAPI</info>
+  <info name="client_id" description="Client Id for the Cherwell API"></info>
+  <info name="client_secret" description="Client Secret (might not be needed and can be left blank)"></info>
+  <info name="username" description="Username that has access to the Cherwell API"></info>
+  <info name="password" type="encrypted" description="Password for the specified username"></info>
+  <info name="auth_mode" description="Authentication mode (Internal, Windows, LDAP, SAML)">Internal</info>
+  <info name="enable_debug_logging" description="Enable debug logging if the value is set to 'Yes'.">No</info>
+</taskInfo>

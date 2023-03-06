@@ -1,0 +1,11 @@
+Cherwell Object Find V2 (2023-03-06)
+* Added ability to handle complex Cherwell filters (more than just equality)
+
+Cherwell Object Find V1 (2019-11-13)
+* Added auth mode to info values
+
+Cherwell Object Find V1 (2019-11-4)
+* Added error message Handling
+
+Cherwell Object Find V1 (2018-03-07)
+* Initial version.  See README for details.

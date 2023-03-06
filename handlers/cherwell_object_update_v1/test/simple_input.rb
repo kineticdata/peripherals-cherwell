@@ -10,7 +10,7 @@
   },
   'parameters' => {
     'error_handling' => 'Error Message',
-    'object_name' => 'Incident',
+    'object_name' => '',
     'object_id' => '',
     'object_json' => ''
   }
