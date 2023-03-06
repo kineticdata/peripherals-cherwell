@@ -1,0 +1,49 @@
+== Cherwell Object Find
+Generically searches for objects from Cherwell.
+
+=== Parameters
+[Error Handling]
+    Determine what to return if an error is encountered.
+[Object Name]
+  Readable name of the object to retrieve (ie. Incident).
+[Fields to Return]
+  Comma separated list of field to return (if none entered, all fields will be returned).
+[Filters]
+  A JSON array of hashes with fieldname/operator/value data that will be searched. Example: [{"fieldname":"Created Date Time","operator":"gt","value":"2023-03-01"}]
+[Max Results]
+  The maximum amount of results that can be returned in a single handler execution (if blank, as
+  many as possible will be returned).
+
+=== Sample Configuration
+Error Handling:               Error Message
+Object Name:            Incident
+Fields to Return:
+Filters:                [{"fieldname": "Status","operator": "eq","value": "New"},{"fieldname": "Customer ID","operator": "eq","value": "fa00c2e9123e423cb2c96e63ee72bc4a"}]
+Max Results:            5
+
+=== Results
+[Handler Error Message]
+    Error message if an error was encountered and Error Handling is set to "Error Message".
+[JSON Results]
+  JSON representations of the objects that match the inputted filters.
+[Count]
+  Total records returned in the JSON Results array.
+[Total Matched]
+  Total records that matched the filters on the Cherwell server.
+
+=== Detailed Description
+This handler generically searches for Cherwell objects given a map of Field Names, Operators and Values
+search on equality and returns a JSON array of the matching objects. Execution starts by retrieving
+an Access Token from Cherwell using the client id/secret and username/password info values. Once
+that is successfully retrieved, the Object Name is translated into a Business Object Id by using
+the /getbusinessobjectsummary endpoint. The /getbusinessobjecttemplate endpoint is then called to
+exchange the Display Names in the filter for Field Ids (which is what Cherwell's API expects). The
+search is then sent with the various options to the server and returns JSON representations of the
+objects that match the filters (up to the max results size -- pagination is not currently implemented
+so the max results is currently just there to protect against killing the server if a filter set
+matches more records than expected). On a successful call, the handler will return the JSON Results,
+the amount of records that are returned in the results, and the amount of records that were matched
+overall (even if they weren't returned in the results).
+
+Note that field names for the Fields to Return or fields used in filters can use either the display
+name or the name or the name of the field.  Example: Created Date Time <or> CreatedDateTime
