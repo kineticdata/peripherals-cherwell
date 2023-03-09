@@ -12,7 +12,7 @@
           tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
         <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object to retrieve (ie. Incident)."/>
-        <parameter id="object_id" label="Object Id" required="true"
+        <parameter id="object_id" label="Rec Id" required="true"
           tooltip="Id of the object to be retrieved."/>
     </parameters>
     <handler name="cherwell_object_retrieve" version="1">

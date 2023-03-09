@@ -58,7 +58,7 @@ class CherwellObjectRetrieveV1
         bus_obj_id = objects[0]["busObId"]
 
         # Retrieve the object based on the business object id and the inputted object id
-        resp = resource["/api/V1/getbusinessobject/busobid/#{bus_obj_id}/publicid/#{@parameters['object_id']}"].get
+        resp = resource["/api/V1/getbusinessobject/busobid/#{bus_obj_id}/busobrecid/#{@parameters['object_id']}"].get
 
         object = JSON.parse(resp.body)
         # Move the fields from a list to a map of {displayName: value}

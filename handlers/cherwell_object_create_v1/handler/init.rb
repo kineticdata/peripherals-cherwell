@@ -26,7 +26,8 @@ class CherwellObjectCreateV1
   def execute
     error_handling  = @parameters["error_handling"]
     error_message = ""
-    id = nil
+    id = nil,
+    recid = nil,
 
     begin
       # Retrieve an access token from Cherwell
@@ -94,6 +95,7 @@ class CherwellObjectCreateV1
         "fields" => body_fields
       }.to_json)
       id = JSON.parse(resp.body)["busObPublicId"]
+      recid = JSON.parse(resp.body)["busObRecId"]
   rescue RestClient::ResourceNotFound => error
     error_message = error.inspect
     raise "404 Not Found: Make sure the 'server', 'api_route'. and 'api_parameters' are valid inputs: #{error.http_body}."
@@ -116,6 +118,7 @@ class CherwellObjectCreateV1
     <results>
       <result name="Handler Error Message">#{escape(error_message)}</result>
       <result name="Object Id">#{escape(id)}</result>
+      <result name="Rec Id">#{escape(recid)}</result>
     </results>
     RESULTS
   end

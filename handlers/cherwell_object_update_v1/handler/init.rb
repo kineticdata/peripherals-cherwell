@@ -89,11 +89,11 @@ class CherwellObjectUpdateV1
         # Create the new object using the business object id and the template field
         resp = resource["/api/V1/savebusinessobject"].post({
           "busObId" => bus_obj_id,
-          "busObPublicId" => @parameters['object_id'],
+          "busObRecId" => @parameters['object_id'],
           "fields" => body_fields
         }.to_json)
         #puts resp.body
-        
+
       end
     rescue RestClient::ResourceNotFound => error
       error_message = error.inspect

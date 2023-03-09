@@ -4,7 +4,7 @@ Generically deletes a Cherwell object
 === Parameters
 [Object Name]
   Readable name of the object to delete (ie. Incident).
-[Object Id]
+[Rec Id]
   Id of the object to be deleted.
 
 === Sample Configuration

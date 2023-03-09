@@ -10,7 +10,7 @@
     <parameters>
         <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object type to upload an attachment to (ie. Incident)."/>
-        <parameter id="object_id" label="Object Id" required="true"
+        <parameter id="object_id" label="Rec Id" required="true"
           tooltip="Id of the object that the attachment will be uploaded to."/>
         <parameter id="attachment_submission_id" label="Attachment Submission Id" required="true"
           tooltip="Id for the Attachment's Request CE submission."/>
