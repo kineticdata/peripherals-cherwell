@@ -12,7 +12,7 @@ Generically retrieves a Cherwell object
 === Sample Configuration
 Error Handling:         Error Message
 Object Name:            Incident
-Object Id:              47285
+Rec Id:                 94934da108977f27c4da3448c4ada0a8e7fcb33285
 
 === Results
 [Handler Error Message]

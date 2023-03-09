@@ -51,7 +51,7 @@ class CherwellObjectDeleteV1
     bus_obj_id = objects[0]["busObId"]
 
     # Delete the object based on the business object id and the inputted object id
-    resp = resource["/api/V1/deletebusinessobject/busobid/#{bus_obj_id}/publicid/#{@parameters['object_id']}"].delete
+    resp = resource["/api/V1/deletebusinessobject/busobid/#{bus_obj_id}/busobrecid/#{@parameters['object_id']}"].delete
     return <<-RESULTS
     <results>
     </results>

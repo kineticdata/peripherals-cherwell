@@ -6,7 +6,7 @@ Generically updates a Cherwell object
     Determine what to return if an error is encountered.
 [Object Name]
   Readable name of the object to retrieve (ie. Incident).
-[Object Id]
+[Rec Id]
   Id of the object to be retrieved.
 [Object JSON]
   A JSON representation of the displayName/values for the fields that the object should be updated

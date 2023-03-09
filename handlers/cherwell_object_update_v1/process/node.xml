@@ -12,8 +12,8 @@
       tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
       <parameter id="object_name" label="Object Name" required="true"
           tooltip="Readable name of the object to update (ie. Incident)."/>
-        <parameter id="object_id" label="Object Id" required="true"
-          tooltip="Public id for the object that should be updated.."/>
+        <parameter id="object_id" label="Rec Id" required="true"
+          tooltip="Object id for the object that should be updated.."/>
         <parameter id="object_json" label="Object JSON" required="true"
           tooltip="A JSON representation of the displayName/values for the fields that the object should be updated with."/>
     </parameters>
@@ -31,8 +31,8 @@
           <parameter name="error_handling">&lt;%= @parameters.has_key?("error_handling") ?
           @parameters["error_handling"] : "Raise Error" %&gt;</parameter>
           <parameter name="object_name">&lt;%= @parameters["object_name"] %&gt;</parameter>
-            <parameter name="object_id">&lt;%= @parameters['object_id'] %&gt;</parameter>
-            <parameter name="object_json">&lt;%= @parameters['object_json'] %&gt;</parameter>
+          <parameter name="object_id">&lt;%= @parameters['object_id'] %&gt;</parameter>
+          <parameter name="object_json">&lt;%= @parameters['object_json'] %&gt;</parameter>
         </parameters>
     </handler>
     <results format="xml">
