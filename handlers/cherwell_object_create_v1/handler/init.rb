@@ -118,7 +118,7 @@ class CherwellObjectCreateV1
     <results>
       <result name="Handler Error Message">#{escape(error_message)}</result>
       <result name="Object Id">#{escape(id)}</result>
-      <result name="Rec Id">#{escape(recid)}</result>
+      <result name="RecID">#{escape(recid)}</result>
     </results>
     RESULTS
   end

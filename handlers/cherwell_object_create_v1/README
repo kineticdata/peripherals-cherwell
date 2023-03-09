@@ -19,6 +19,8 @@ Object JSON:            {"Status":"New","Description":"From Kinetic Task"...}
     Error message if an error was encountered and Error Handling is set to "Error Message".
 [Object Id]
   Id for the newly created object
+[RecID]
+  The RecID field for the newly created object
 
 === Detailed Description
 This handler generically creates a Cherwell object based on inputted JSON and returns an id of the

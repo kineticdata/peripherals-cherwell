@@ -35,6 +35,6 @@
     <results format="xml">
         <result name="Handler Error Message"/>
         <result name="Object Id"></result>
-        <result name="Rec Id"></result>
+        <result name="RecID"></result>
     </results>
 </taskDefinition>
