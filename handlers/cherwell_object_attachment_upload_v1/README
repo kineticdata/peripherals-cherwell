@@ -4,7 +4,7 @@ Generically uploads an attachment from a Request CE submission to an existing ob
 === Parameters
 [Object Name]
   Readable name of the object type to upload an attachment to (ie. Incident).
-[Object Id]
+[Rec Id]
   Id of the object that the attachment will be uploaded to.
 [Attachment Space Slug]
   Slug for the Attachment's Request CE space.
