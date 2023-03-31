@@ -11,6 +11,7 @@
     'enable_debug_logging'=>'yes'
   },
   'parameters' => {
+    'error_handling' => 'Error Message',
     'object_name' => 'Incident'
     'object_id' => ''
     'attachment_space_slug' => ''
