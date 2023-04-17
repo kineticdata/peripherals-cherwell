@@ -24,6 +24,7 @@ class CherwellObjectAttachmentUploadV1
   end
 
   def execute
+    error_handling  = @parameters["error_handling"]
     attachment_ids = []
 
     begin
